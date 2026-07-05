@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Connecting to Deriv...</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #00c6ff, #0072ff, #6a11cb);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(20, 20, 40, 0.95);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 30px;
+      border: 4px solid rgba(0, 198, 255, 0.2);
+      border-top-color: #00c6ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    h1 {
+      color: #ffffff;
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+    .status {
+      color: #a0d0ff;
+      font-size: 16px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    .error {
+      background: rgba(255, 77, 109, 0.1);
+      border: 1px solid rgba(255, 77, 109, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      color: #ff6b9d;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .error.show {
+      display: block;
+    }
+    .success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      color: #4ade80;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .success.show {
+      display: block;
+    }
+    .button {
+      background: linear-gradient(90deg, #0072ff, #00c6ff);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 20px;
+      display: none;
+    }
+    .button.show {
+      display: inline-block;
+    }
+    .button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <h1>Connecting to Deriv</h1>
+    <div class="status" id="status">
+      Processing your authorization...
+    </div>
+    <div class="error" id="error"></div>
+    <div class="success" id="success"></div>
+    <button class="button" id="continueBtn" onclick="window.location.href = '/app/'">
+      Continue to Dashboard →
+    </button>
+  </div>
+
+  <script>
+    // Get authorization code from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+
+    const statusEl = document.getElementById('status');
+    const errorEl = document.getElementById('error');
+    const successEl = document.getElementById('success');
+    const continueBtn = document.getElementById('continueBtn');
+
+    async function processCallback() {
+      try {
+        // Handle errors from Deriv
+        if (error) {
+          throw new Error(errorDescription || `Authorization failed: ${error}`);
+        }
+
+        if (!code) {
+          throw new Error('No authorization code received from Deriv');
+        }
+
+        // Store the code in sessionStorage (temporary)
+        sessionStorage.setItem('deriv_auth_code', code);
+
+        // Call the Netlify function to process the code
+        const response = await fetch('/.netlify/functions/callback?code=' + code);
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.message || 'Failed to process authorization');
+        }
+
+        // Success!
+        statusEl.style.display = 'none';
+        successEl.textContent = '✓ Authorization successful! Redirecting to dashboard...';
+        successEl.classList.add('show');
+        continueBtn.classList.add('show');
+
+        // Auto-redirect after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/app/';
+        }, 2000);
+
+      } catch (err) {
+        console.error('Callback Error:', err);
+        statusEl.style.display = 'none';
+        errorEl.textContent = '✗ ' + err.message;
+        errorEl.classList.add('show');
+        continueBtn.textContent = '← Go Back';
+        continueBtn.onclick = () => window.location.href = '/';
+        continueBtn.classList.add('show');
+      }
+    }
+
+    // Process when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', processCallback);
+    } else {
+      processCallback();
+    }
+  </script>
+</body>
+</html>
