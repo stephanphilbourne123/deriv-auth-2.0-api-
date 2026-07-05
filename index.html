@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mickey Smart AI — Login</title>
+<link rel="icon" href="favicon.png">
+
+<style>
+  :root{
+    /* Ocean Breeze Mix */
+    --bg1:#00c6ff;
+    --bg2:#6a11cb;
+    --card:#0f1c3f;
+    --card-soft:#16265a;
+    --text:#ffffff;
+    --muted:#bcdcff;
+    --accent1:#00e0ff;
+    --accent2:#3a7bff;
+    --danger:#ff4d6d;
+    --border:rgba(255,255,255,.15);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+
+  body{
+    font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text);
+    overflow-x:hidden;
+    /* animated Ocean Breeze gradient */
+    background:
+      radial-gradient(circle at top right,rgba(255,255,255,.12),transparent 55%),
+      radial-gradient(circle at bottom left,rgba(0,0,0,.25),transparent 60%),
+      linear-gradient(135deg,#00c6ff,#0072ff,#6a11cb);
+    background-size:260% 260%;
+    animation:bgShift 18s ease-in-out infinite;
+  }
+
+  @keyframes bgShift{
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+
+  /* FLOATING EMOJIS (Ocean Breeze) */
+  .float-wrap{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:0;
+  }
+  .float-emoji{
+    position:absolute;
+    opacity:.55;
+    filter:drop-shadow(0 10px 16px rgba(0,0,0,.28));
+    animation:floatDrift 16s ease-in-out infinite;
+    user-select:none;
+  }
+  .float-emoji.small{font-size:22px; opacity:.45;}
+  .float-emoji.med{font-size:30px; opacity:.55;}
+  .float-emoji.big{font-size:42px; opacity:.6;}
+
+  @keyframes floatDrift{
+    0%{ transform:translate3d(0,18px,0) rotate(0deg); }
+    50%{ transform:translate3d(18px,-18px,0) rotate(10deg); }
+    100%{ transform:translate3d(0,18px,0) rotate(0deg); }
+  }
+
+  /* rising bubbles */
+  @keyframes floatRise{
+    0%{ transform:translate3d(0,110vh,0) rotate(0deg); opacity:0; }
+    10%{ opacity:.55; }
+    60%{ opacity:.55; }
+    100%{ transform:translate3d(-16px,-140px,0) rotate(24deg); opacity:0; }
+  }
+
+  /* layout shell */
+  .shell{
+    position:relative;
+    z-index:1;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* top nav */
+  .nav{
+    height:56px;
+    padding:0 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:rgba(18,18,32,.65);
+    backdrop-filter:blur(18px);
+    border-bottom:1px solid rgba(255,255,255,.15);
+  }
+  .nav-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .logo-dot{
+    width:22px;height:22px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 18px rgba(255,213,74,.8);
+    font-size:13px;font-weight:800;
+  }
+  .nav-title{
+    font-weight:700;
+    font-size:16px;
+  }
+  .nav-tag{
+    font-size:11px;
+    padding:3px 7px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.35);
+    color:var(--muted);
+  }
+  .nav-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:13px;
+  }
+  .nav-link{
+    color:var(--muted);
+    text-decoration:none;
+  }
+  .nav-btn{
+    border:none;
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:13px;
+    background:linear-gradient(90deg,var(--accent1),var(--accent2));
+    color:#3b0b13;
+    cursor:pointer;
+    font-weight:600;
+    box-shadow:0 6px 18px rgba(0,0,0,.45);
+  }
+
+  /* center content */
+  .main{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:30px 14px 40px;
+  }
+
+  .wrap{
+    width:min(760px,100%);
+    background:radial-gradient(circle at top left,rgba(255,255,255,.06),transparent 55%),
+               radial-gradient(circle at 120% 120%,rgba(0,0,0,.45),transparent 50%),
+               linear-gradient(180deg,rgba(20,18,40,.96),rgba(10,10,28,.98));
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 22px 55px rgba(0,0,0,.8);
+    padding:22px 22px 18px;
+    display:grid;
+    grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr);
+    gap:18px;
+  }
+  @media (max-width:720px){
+    .wrap{
+      grid-template-columns:1fr;
+      padding:20px 16px 16px;
+    }
+    .nav{padding:0 12px;}
+  }
+
+  /* left side */
+  .hero{
+    padding-right:10px;
+    border-right:1px solid rgba(255,255,255,.11);
+  }
+  @media (max-width:720px){
+    .hero{
+      border-right:none;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      padding-right:0;
+      padding-bottom:14px;
+      margin-bottom:6px;
+    }
+  }
+
+  .hero-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .hero-title{
+    font-size:22px;
+    font-weight:800;
+    margin-bottom:6px;
+  }
+  .hero-sub{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:16px;
+    line-height:1.5;
+  }
+
+  .pill-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:12px;
+  }
+  .pill{
+    font-size:11px;
+    padding:6px 9px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(35,35,70,.96);
+    color:var(--muted);
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+  }
+  .pill strong{color:#ffffff;font-weight:600;}
+
+  .price-card{
+    margin-top:8px;
+    background:linear-gradient(90deg,#ff4b91,#ff6a00);
+    border-radius:14px;
+    padding:10px 12px;
+    font-size:12px;
+    font-weight:600;
+    text-align:center;
+    box-shadow:0 12px 24px rgba(0,0,0,.5);
+  }
+  .price-sub{
+    font-size:11px;
+    margin-top:4px;
+    opacity:.9;
+  }
+
+  .cta-row{
+    margin-top:14px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .cta-btn{
+    border:none;
+    border-radius:999px;
+    padding:10px 14px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    text-decoration:none;
+  }
+  .cta-primary{
+    background:linear-gradient(90deg,#30c6ff,#13a8ff);
+    color:#fff;
+    box-shadow:0 10px 25px rgba(0,0,0,.65);
+  }
+  .cta-ghost{
+    background:rgba(30,30,70,.96);
+    border:1px solid rgba(255,255,255,.15);
+    color:var(--text);
+  }
+
+  .risk-note{
+    margin-top:12px;
+    font-size:10px;
+    color:var(--muted);
+    opacity:.9;
+    display:flex;
+    gap:6px;
+    align-items:flex-start;
+  }
+  .risk-note span.icon{
+    color:var(--danger); font-size:12px; margin-top:1px;
+  }
+
+  /* right side: LOGIN PANEL (red Christmas style) */
+  .auth-card{
+    background:linear-gradient(160deg,#0f1c3f,#1a2b6c,#6a11cb);
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.18);
+    padding:16px 16px 13px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    box-shadow:0 18px 35px rgba(0,0,0,.7);
+  }
+  .auth-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:4px;
+  }
+  .auth-title{
+    font-size:15px;
+    font-weight:700;
+  }
+  .auth-sub{
+    font-size:12px;
+    color:#ffd3d9;
+    margin-bottom:8px;
+  }
+  .lock-icon{
+    width:30px;height:30px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+    box-shadow:0 0 15px rgba(255,213,74,.9);
+  }
+
+  .btn-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .btn{
+    cursor:pointer;
+    border:none;
+    border-radius:999px;
+    padding:10px 14px;
+    font-weight:600;
+    font-size:13px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  .btn.primary{
+    background:linear-gradient(90deg,#22e08a,#0bbf56);
+    color:#06130b;
+    box-shadow:0 10px 24px rgba(0,0,0,.7);
+  }
+  .btn.secondary{
+    background:rgba(40,8,18,.9);
+    border:1px solid rgba(255,255,255,.35);
+    color:#ffe7e7;
+  }
+  .status{
+    font-size:11px;
+    color:#ffd3d9;
+    margin-top:2px;
+  }
+
+/* ===== DISCLAIMER + VALENTINE PROMO POPUPS ===== */
+
+/* shared overlay */
+.msai-overlay{
+  position:fixed; inset:0;
+  display:none; /* shown via JS */
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
+  z-index:99999;
+  padding:16px;
+}
+
+/* DISCLAIMER */
+.disclaimer-card{
+  width:min(720px,94vw);
+  border-radius:20px;
+  overflow:hidden;
+  background:#ffffff;
+  box-shadow:0 24px 60px rgba(0,0,0,.6);
+  border:1px solid rgba(255,255,255,.2);
+}
+.disclaimer-head{
+  background:linear-gradient(90deg,#ff3b30,#ff6a00);
+  color:#fff;
+  padding:18px 18px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.disclaimer-icon{
+  width:42px; height:42px;
+  border-radius:14px;
+  background:rgba(255,255,255,.18);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+}
+.disclaimer-title{
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.3px;
+}
+.disclaimer-sub{
+  font-size:12px;
+  opacity:.9;
+  margin-top:2px;
+}
+.disclaimer-body{
+  padding:16px 18px 18px;
+  color:#111;
+  max-height:70vh;
+  overflow:auto;
+}
+.disclaimer-callout{
+  border-left:5px solid #ff3b30;
+  background:#fff7f6;
+  padding:12px 12px;
+  border-radius:14px;
+  font-size:13px;
+  line-height:1.45;
+}
+.disclaimer-danger{ color:#d93025; font-weight:900; }
+.disclaimer-h{
+  margin:14px 0 8px;
+  font-size:14px;
+  font-weight:900;
+}
+.disclaimer-list{
+  margin:0;
+  padding-left:18px;
+  font-size:13px;
+  line-height:1.55;
+}
+.disclaimer-note{
+  margin-top:14px;
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  padding:12px;
+  border-radius:14px;
+  font-size:13px;
+}
+.disclaimer-btn{
+  width:calc(100% - 36px);
+  margin:0 18px 18px;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  font-weight:900;
+  background:linear-gradient(180deg,#d93025,#b31412);
+  color:#fff;
+  cursor:pointer;
+}
+
+/* VALENTINE PROMO (re-uses promoOverlay/promo-card ids/classes so nothing else breaks) */
+.promo-overlay{
+  position:fixed; inset:0;
+  display:none; /* shown via JS */
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
+  z-index:99999;
+  padding:16px;
+}
+.promo-card{
+  width:min(520px,94vw);
+  border-radius:22px;
+  padding:22px 20px 20px;
+  background:
+    radial-gradient(circle at top, rgba(255,105,180,.18), transparent 55%),
+    radial-gradient(circle at bottom left, rgba(255,154,61,.10), transparent 55%),
+    linear-gradient(180deg,#2a0a16,#14070c);
+  border:2px solid rgba(255,105,180,.28);
+  box-shadow:0 24px 60px rgba(0,0,0,.6);
+  color:#fff;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.promo-card:before{
+  content:"";
+  position:absolute; inset:-40px;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(255,90,165,.18), transparent 40%),
+    radial-gradient(circle at 78% 35%, rgba(255,105,180,.14), transparent 45%),
+    radial-gradient(circle at 40% 85%, rgba(255,154,61,.10), transparent 50%);
+  filter:blur(2px);
+  pointer-events:none;
+}
+.promo-card > *{ position:relative; z-index:1; }
+
+.promo-x{
+  position:absolute; top:10px; right:10px;
+  width:38px; height:38px;
+  border-radius:12px;
+  border:none;
+  background:rgba(255,255,255,.14);
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+}
+.promo-off{
+  font-size:46px;
+  font-weight:950;
+  text-shadow:0 0 14px rgba(255,105,180,.55);
+}
+.promo-sub{
+  font-size:32px;
+  font-weight:950;
+  color:#44ffb0;
+  text-shadow:0 0 12px rgba(68,255,176,.30);
+  margin-bottom:6px;
+}
+.promo-tagline{
+  font-size:13px;
+  opacity:.95;
+  margin-bottom:10px;
+}
+.promo-price-old{
+  text-decoration:line-through;
+  opacity:.65;
+  font-size:20px;
+}
+.promo-price-new{
+  font-size:46px;
+  font-weight:950;
+  margin:6px 0;
+  text-shadow:0 0 12px rgba(255,60,120,.22);
+}
+.promo-line{
+  height:4px;
+  width:85%;
+  margin:10px auto;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(255,105,180,.9),transparent);
+}
+.promo-save{
+  font-weight:900;
+  margin-bottom:12px;
+}
+.promo-badge{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,105,180,.28);
+  margin-bottom:14px;
+  font-weight:900;
+}
+.promo-ends{
+  border-radius:18px;
+  padding:14px;
+  background:rgba(0,0,0,.22);
+  border:2px solid rgba(68,255,176,.18);
+  margin-bottom:14px;
+}
+.promo-ends h3{
+  margin:6px 0;
+  font-size:28px;
+}
+.promo-timer{
+  font-weight:900;
+  letter-spacing:2px;
+}
+.promo-cta{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  font-weight:950;
+  background:linear-gradient(90deg,#ff5aa5,#ff2e63,#ff9a3d);
+  color:#1b0b12;
+  cursor:pointer;
+}
+
+
+  /* ===== WELCOME CTA + WELCOME VIDEO POPUP ===== */
+  .welcome-cta{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-right:8px;
+  }
+  .start-here-pill,
+  .welcome-pill{
+    background:#0b0b0b;
+    color:#fff;
+    border:1px solid rgba(255,255,255,.15);
+    padding:6px 14px;
+    border-radius:10px;
+    font-weight:800;
+    font-size:13px;
+    letter-spacing:.2px;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+    white-space:nowrap;
+  }
+  .welcome-pill{
+    cursor:pointer;
+    transition:.15s ease;
+  }
+  .welcome-pill:hover{ transform: translateY(-1px); }
+
+  .cta-arrow{
+    color:#ff3b30;
+    font-size:20px;
+    font-weight:900;
+    text-shadow:0 6px 12px rgba(0,0,0,.25);
+    transform: translateY(-1px);
+  }
+
+  /* WELCOME MODAL */
+  .wsai-hidden{ display:none !important; }
+
+  .wsai-modal{
+    position:fixed;
+    inset:0;
+    z-index:99998;
+  }
+  .wsai-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    backdrop-filter: blur(6px);
+  }
+  .wsai-card{
+    position:relative;
+    width:min(920px, 94vw);
+    max-height:90vh;
+    margin:7vh auto 0;
+    border-radius:18px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.12);
+    background: linear-gradient(180deg, rgba(20,20,30,.92), rgba(10,10,18,.92));
+    box-shadow:0 18px 60px rgba(0,0,0,.55);
+  }
+  .wsai-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:14px 16px;
+    background:rgba(255,255,255,.06);
+    border-bottom:1px solid rgba(255,255,255,.10);
+  }
+  .wsai-title{
+    color:#fff;
+    font-size:14px;
+    font-weight:900;
+  }
+  .wsai-pill{
+    margin-left:auto;
+    margin-right:6px;
+    padding:6px 14px;
+    border-radius:999px;
+    background:rgba(34,197,94,.18);
+    border:1px solid rgba(34,197,94,.35);
+    color:#b9ffcf;
+    font-weight:950;
+    letter-spacing:.6px;
+    font-size:12px;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .wsai-close{
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    border:1px solid rgba(255,255,255,.14);
+    width:38px; height:38px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:16px;
+  }
+  .wsai-body{
+    padding:16px;
+    display:grid;
+    gap:16px;
+    grid-template-columns: 420px 1fr;
+  }
+  .wsai-video{
+    border-radius:16px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.10);
+    background:#000;
+  }
+  .wsai-video video{
+    width:100%;
+    height:auto;
+    display:block;
+    max-height:58vh;
+    object-fit:contain;
+  }
+  .wsai-text{
+    color:#e9eefc;
+    padding:14px;
+    border-radius:16px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+  }
+  .wsai-text h4{ margin:0 0 10px; color:#fff; }
+  .wsai-text ul{ margin:10px 0 0 18px; }
+  .wsai-warning{ margin-top:12px; color:#ffb3b3; font-weight:700; }
+
+  @media (max-width: 820px){
+    .wsai-body{ grid-template-columns: 1fr; }
+    .wsai-video video{ max-height:46vh; }
+  }
+  @media (max-width: 520px){
+    .start-here-pill, .welcome-pill{ font-size:12px; padding:5px 10px; border-radius:9px; }
+    .cta-arrow{ font-size:18px; }
+  }
+
+
+
+  .support-pill{
+    background:#00ff66;
+    color:#003318;
+    border:none;
+    padding:6px 14px;
+    border-radius:10px;
+    font-weight:900;
+    font-size:13px;
+    cursor:pointer;
+    box-shadow:0 0 10px rgba(0,255,102,.6);
+  }
+  .support-pill:hover{
+    background:#00e65c;
+  }
+
+</style>
+</head>
+
+
+<body>
+
+  <!-- floating emojis (Ocean Breeze) -->
+  <div class="float-wrap" aria-hidden="true">
+    <div class="float-emoji big" style="left:6%;  top:12%;  animation-duration:18s; animation-delay:-2s;">🌊</div>
+    <div class="float-emoji med" style="left:18%; top:30%;  animation-duration:15s; animation-delay:-6s;">💧</div>
+    <div class="float-emoji small" style="left:30%; top:56%; animation-duration:17s; animation-delay:-4s;">✨</div>
+    <div class="float-emoji med" style="left:48%; top:18%;  animation-duration:16s; animation-delay:-7s;">🤖</div>
+    <div class="float-emoji big" style="left:66%; top:44%;  animation-duration:19s; animation-delay:-3s;">🌌</div>
+    <div class="float-emoji med" style="left:82%; top:26%;  animation-duration:14s; animation-delay:-5s;">🚀</div>
+    <div class="float-emoji small" style="left:92%; top:72%; animation-duration:17s; animation-delay:-8s;">🫧</div>
+
+    <div class="float-emoji med" style="left:12%; top:78%; animation-duration:20s; animation-delay:-9s;">🧠</div>
+    <div class="float-emoji small" style="left:40%; top:84%; animation-duration:18s; animation-delay:-11s;">📊</div>
+    <div class="float-emoji med" style="left:58%; top:68%; animation-duration:16s; animation-delay:-10s;">⚡</div>
+    <div class="float-emoji small" style="left:74%; top:82%; animation-duration:19s; animation-delay:-12s;">🌟</div>
+
+    <!-- rising bubbles (start offscreen, float up behind everything) -->
+    <div class="float-emoji small" style="left:10%; animation:floatRise 12s linear infinite; animation-delay:-2s;">🫧</div>
+    <div class="float-emoji small" style="left:26%; animation:floatRise 14s linear infinite; animation-delay:-6s;">🫧</div>
+    <div class="float-emoji small" style="left:44%; animation:floatRise 13s linear infinite; animation-delay:-4s;">🫧</div>
+    <div class="float-emoji small" style="left:62%; animation:floatRise 15s linear infinite; animation-delay:-7s;">🫧</div>
+    <div class="float-emoji small" style="left:80%; animation:floatRise 12.5s linear infinite; animation-delay:-5s;">🫧</div>
+  </div>
+
+<div class="shell">
+    <!-- top nav -->
+    <header class="nav">
+      <div class="nav-left">
+        <div class="logo-dot">M</div>
+        <div>
+          <div class="nav-title">Mickey Smart AI</div>
+          <div class="nav-tag">AI Trading • Deriv</div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <div class="welcome-cta">
+          <button id="supportBtn" class="support-pill" type="button">Support</button>
+          <span class="start-here-pill">Start here</span>
+          <span class="cta-arrow">➜</span>
+          <button id="welcomeBtn" class="welcome-pill" type="button">Welcome</button>
+        </div>
+        <a class="nav-link" href="#">Home</a>
+        <button class="nav-btn" id="nav-login-btn">Login</button>
+      </div>
+    </header>
+
+    <!-- main content -->
+    <main class="main">
+      <div class="wrap">
+        <!-- LEFT -->
+        <section class="hero">
+          <div class="hero-label">SMART AUTOMATION • 24/7</div>
+          <h1 class="hero-title">Login to Mickey Smart AI</h1>
+          <p class="hero-sub">
+            Connect to your private trading dashboard, manage your risk,
+            and let the AI watch the charts while you focus on real life.
+          </p>
+
+          <div class="pill-row">
+            <div class="pill"><strong>AI</strong> for Deriv</div>
+            <div class="pill"><strong>Risk management</strong></div>
+            <div class="pill"><strong>Real-time</strong> monitoring</div>
+          </div>
+
+          <div class="price-card">
+            Access starts at <strong>JMD $15,000</strong> / <strong>~USD $97</strong> per month
+            <div class="price-sub">Ask admin for full details &amp; funding options.</div>
+          </div>
+
+          <div class="cta-row">
+            <a class="cta-btn cta-primary"
+               href="https://t.me/mickeydonaibot"
+               target="_blank" rel="noopener">
+              💬 Message me on Telegram
+            </a>
+            <button class="cta-btn cta-ghost">
+              📄 View basic usage guide
+            </button>
+          </div>
+
+          <div class="risk-note">
+            <span class="icon">⚠</span>
+            <span>
+              Trading on Deriv involves significant risk and may not be suitable for everyone.
+              Only trade with money you can afford to lose and make sure you understand the risks involved.
+            </span>
+          </div>
+        </section>
+
+        <!-- RIGHT: login panel -->
+        <section class="auth-card">
+          <div class="auth-head">
+            <div>
+              <div class="auth-title">Secure Login</div>
+              <div class="auth-sub">
+                Use your email invite to sign in or create your account to continue to the dashboard.
+              </div>
+            </div>
+            <div class="lock-icon">🔒</div>
+          </div>
+
+          <div class="btn-row">
+            <button id="btn-open" class="btn primary">
+              Sign in / Sign up
+            </button>
+            <button id="btn-logout" class="btn secondary" style="display:none">
+              Log out
+            </button>
+          </div>
+
+          <div id="status" class="status">Checking session…</div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  
+  <!-- WELCOME POPUP (VIDEO + SCRIPT) -->
+  <div id="welcomeModal" class="wsai-modal wsai-hidden" aria-hidden="true">
+    <div class="wsai-backdrop"></div>
+
+    <div class="wsai-card" role="dialog" aria-modal="true">
+      <div class="wsai-head">
+        <div class="wsai-title">Welcome to Mickey Smart AI</div>
+        <div class="wsai-pill">WELCOME</div>
+        <button id="welcomeClose" class="wsai-close" type="button">✕</button>
+      </div>
+
+      <div class="wsai-body">
+        <div class="wsai-video">
+          <video id="welcomeVideo" controls playsinline preload="metadata">
+            <source src="assets/4E386434-9D40-A69A-5BF4-F22CB4D49471 (1).mp4" type="video/mp4">
+          </video>
+        </div>
+
+        <div class="wsai-text">
+          <h4>About this platform</h4>
+          <p>
+            Welcome to <b>Mickey Smart AI</b> — your smart trading assistant for Deriv.
+            This platform is designed to help you trade smarter, manage risk, and stay consistent.
+          </p>
+          <ul>
+            <li>AI strategies (Auto &amp; Manual)</li>
+            <li>Real-time analysis tools</li>
+            <li>Risk management support</li>
+            <li>Guides inside each panel</li>
+          </ul>
+          <p class="wsai-warning">
+            Trading involves risk. Only trade what you can afford to lose. Results are not guaranteed.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- Netlify Identity widget -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    let landingRedirecting = false;
+    const landingRedirectKey = "mickey_landing_redirect_at";
+    function markLandingRedirect(){
+      try { sessionStorage.setItem(landingRedirectKey, String(Date.now())); } catch (e) {}
+    }
+    function clearLandingRedirect(){
+      try { sessionStorage.removeItem(landingRedirectKey); } catch (e) {}
+    }
+    function landingRedirectLoopActive(){
+      try {
+        const last = Number(sessionStorage.getItem(landingRedirectKey) || 0);
+        return last > 0 && (Date.now() - last) < 5000;
+      } catch (e) {
+        return false;
+      }
+    }
+    async function waitForIdentitySession(timeoutMs = 10000){
+      const started = Date.now();
+      while ((Date.now() - started) < timeoutMs) {
+        try {
+          const user = window.netlifyIdentity && netlifyIdentity.currentUser
+            ? netlifyIdentity.currentUser()
+            : null;
+          if (user) {
+            if (typeof user.jwt === "function") {
+              await user.jwt();
+            }
+            return user;
+          }
+        } catch (e) {
+          // Mobile Safari can briefly report a user before the token is fully ready.
+        }
+        await new Promise(resolve => window.setTimeout(resolve, 250));
+      }
+      return null;
+    }
+
+    function userHasMemberAccess(user){
+      // FIX: allow any signed-in Netlify Identity user into the dashboard.
+      // The old version required app_metadata.roles to include "member",
+      // which caused the "Access Pending" message for normal accounts.
+      return !!user;
+    }
+
+    function showAccessPending(status, btnOpen, btnLogout, navLogin){
+      landingRedirecting = false;
+      clearLandingRedirect();
+      if (status) status.textContent = "Signed in, but this account does not have dashboard access yet. Ask the admin to add the member role.";
+      if (btnOpen) {
+        btnOpen.disabled = false;
+        btnOpen.textContent = "Open Dashboard";
+      }
+      if (btnLogout) {
+        btnLogout.disabled = false;
+        btnLogout.style.display = "inline-flex";
+      }
+      if (navLogin) navLogin.disabled = false;
+    }
+
+    async function goApp(message){
+      if (landingRedirecting) return;
+      landingRedirecting = true;
+      markLandingRedirect();
+      const status = document.getElementById("status");
+      const btnOpen = document.getElementById("btn-open");
+      const btnLogout = document.getElementById("btn-logout");
+      const navLogin = document.getElementById("nav-login-btn");
+      if (status) status.textContent = message || "Signed in - preparing dashboard access...";
+      if (btnOpen) btnOpen.disabled = true;
+      if (btnLogout) btnLogout.disabled = true;
+      if (navLogin) navLogin.disabled = true;
+
+      const user = await waitForIdentitySession();
+      if (!user) {
+        landingRedirecting = false;
+        clearLandingRedirect();
+        if (status) status.textContent = "Login worked, but secure access was not ready yet. Please tap Login again in a moment.";
+        if (btnOpen) btnOpen.disabled = false;
+        if (btnLogout) btnLogout.disabled = false;
+        if (navLogin) navLogin.disabled = false;
+        return;
+      }
+
+      if (!userHasMemberAccess(user)) {
+        showAccessPending(status, btnOpen, btnLogout, navLogin);
+        return;
+      }
+
+      if (status) status.textContent = "Signed in - redirecting to dashboard...";
+      const appUrl = new URL("/app/", window.location.origin).toString();
+      window.setTimeout(() => window.location.replace(appUrl), 400);
+    }
+
+    document.addEventListener("DOMContentLoaded", function(){
+      const status   = document.getElementById("status");
+      const btnOpen  = document.getElementById("btn-open");
+      const btnLogout= document.getElementById("btn-logout");
+      const navLogin = document.getElementById("nav-login-btn");
+
+      function openLogin(){
+        if (landingRedirecting) return;
+        if (!window.netlifyIdentity) return;
+
+        const user = typeof netlifyIdentity.currentUser === "function"
+          ? netlifyIdentity.currentUser()
+          : null;
+
+        if (user) {
+          if (!userHasMemberAccess(user)) {
+            showAccessPending(status, btnOpen, btnLogout, navLogin);
+            return;
+          }
+          goApp("Signed in - redirecting to dashboard...");
+          return;
+        }
+
+        netlifyIdentity.open("login");
+      }
+      btnOpen.onclick  = openLogin;
+      navLogin.onclick = openLogin;
+
+      netlifyIdentity.on("init", (user) => {
+        if (user) {
+          if (!userHasMemberAccess(user)) {
+            showAccessPending(status, btnOpen, btnLogout, navLogin);
+            return;
+          }
+          if (landingRedirectLoopActive()) {
+            clearLandingRedirect();
+            status.textContent = "Signed in. Automatic dashboard redirect was paused to stop a refresh loop. Tap Open Dashboard when ready.";
+            btnOpen.textContent = "Open Dashboard";
+            btnLogout.style.display = "inline-flex";
+            landingRedirecting = false;
+            btnOpen.disabled = false;
+            return;
+          }
+          status.textContent = "Signed in — redirecting to dashboard…";
+          btnOpen.textContent = "Open Dashboard";
+          btnLogout.style.display = "inline-flex";
+          landingRedirecting = false;
+          btnOpen.disabled = false;
+        } else {
+          clearLandingRedirect();
+          btnOpen.textContent = "Sign in / Sign up";
+          status.textContent = "Not signed in.";
+          btnLogout.style.display = "none";
+          btnOpen.disabled = false;
+        }
+      });
+
+            netlifyIdentity.on("login", (user) => {
+        if (!userHasMemberAccess(user)) {
+          showAccessPending(status, btnOpen, btnLogout, navLogin);
+          return;
+        }
+        status.textContent = "Login successful - preparing dashboard session...";
+        btnLogout.style.display = "inline-flex";
+        try { netlifyIdentity.close(); } catch (e) {}
+        window.setTimeout(() => goApp("Login successful - redirecting..."), 250);
+      });
+
+      netlifyIdentity.on("logout", () => {
+        landingRedirecting = false;
+        clearLandingRedirect();
+        status.textContent = "Signed out.";
+        btnLogout.style.display = "none";
+        btnOpen.disabled = false;
+        navLogin.disabled = false;
+      });
+
+      btnLogout.onclick = () => netlifyIdentity.logout();
+
+      netlifyIdentity.init();
+    });
+  </script>
+
+
+  <script>
+    (function(){
+      const btn = document.getElementById('welcomeBtn');
+      const modal = document.getElementById('welcomeModal');
+      const closeBtn = document.getElementById('welcomeClose');
+      const backdrop = modal ? modal.querySelector('.wsai-backdrop') : null;
+      const vid = document.getElementById('welcomeVideo');
+
+      function openWelcome(){
+        if(!modal) return;
+        modal.classList.remove('wsai-hidden');
+        modal.setAttribute('aria-hidden','false');
+        if(vid){ try{ vid.currentTime = 0; }catch(e){} }
+      }
+      function closeWelcome(){
+        if(!modal) return;
+        modal.classList.add('wsai-hidden');
+        modal.setAttribute('aria-hidden','true');
+        if(vid){ try{ vid.pause(); }catch(e){} }
+      }
+
+      if(btn) btn.addEventListener('click', openWelcome);
+      if(closeBtn) closeBtn.addEventListener('click', closeWelcome);
+      if(backdrop) backdrop.addEventListener('click', closeWelcome);
+
+      document.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape' && modal && !modal.classList.contains('wsai-hidden')){
+          closeWelcome();
+        }
+      });
+    })();
+  </script>
+
+
+<!-- DISCLAIMER POPUP (shows first) -->
+<div id="disclaimerOverlay" class="msai-overlay" aria-modal="true" role="dialog">
+  <div class="disclaimer-card">
+    <div class="disclaimer-head">
+      <div class="disclaimer-icon">🛡️</div>
+      <div>
+        <div class="disclaimer-title">IMPORTANT DISCLAIMER</div>
+        <div class="disclaimer-sub">Please Read Carefully Before Proceeding</div>
+      </div>
+    </div>
+
+    <div class="disclaimer-body">
+      <div class="disclaimer-callout">
+        The content in this bot is for <b>educational and informational purposes only</b> and should not be considered as
+        financial, investment, or trading advice. Trading involves <span class="disclaimer-danger">substantial risk of loss</span>
+        and is not suitable for all investors.
+      </div>
+
+      <div class="disclaimer-h">Key Points</div>
+      <ul class="disclaimer-list">
+        <li>Past performance does not guarantee future results</li>
+        <li>All trading involves risk, and you may lose some or all of your invested capital</li>
+        <li>Never invest money you cannot afford to lose</li>
+        <li>The presenter is not a licensed financial advisor</li>
+        <li>This content represents personal opinions and experiences, not professional recommendations</li>
+        <li>Market conditions can change rapidly and unpredictably</li>
+      </ul>
+
+      <div class="disclaimer-h">Before Making Any Trading Decisions</div>
+      <ul class="disclaimer-list">
+        <li>Conduct your own research and due diligence</li>
+        <li>Consider your financial situation, risk tolerance, and investment objectives</li>
+        <li>Consult with a qualified financial advisor if needed</li>
+        <li>Only trade with money you can afford to lose</li>
+      </ul>
+
+      <div class="disclaimer-note">
+        By proceeding, you acknowledge that you understand these risks and agree that the presenter/channel is <b>not responsible</b>
+        for any trading losses you may incur.
+      </div>
+    </div>
+
+    <button id="disclaimerAgreeBtn" class="disclaimer-btn">
+      Trade Responsibly and at Your Own Risk
+    </button>
+  </div>
+</div>
+
+<!-- VALENTINE PROMO POPUP -->
+<div id="promoOverlay" class="promo-overlay" aria-modal="true" role="dialog">
+  <div class="promo-card">
+    <button class="promo-x" id="promoCloseBtn" aria-label="Close">✕</button>
+
+    <div class="promo-off">33% OFF</div>
+    <div class="promo-sub">SUBSCRIPTION!</div>
+    <div class="promo-tagline">💖 Valentine’s Day Special 💖</div>
+
+    <div class="promo-price-old">JMD 15,000</div>
+    <div class="promo-price-new">JMD 10,000</div>
+
+    <div class="promo-line"></div>
+    <div class="promo-save">SAVE JMD 5,000 TODAY!</div>
+
+    <div class="promo-badge">💝 AVAILABLE FOR ALL USERS 💝</div>
+
+    <div class="promo-ends">
+      <div>📅 OFFER ENDS</div>
+      <h3>FEBRUARY 20, 2026</h3>
+      <div class="promo-timer" id="promoTimer">-- : -- : --</div>
+    </div>
+
+    <div style="margin:8px 0;font-size:13px;opacity:.9">
+      Click below to message admin on Telegram
+    </div>
+
+    <button class="promo-cta" id="promoCtaBtn">
+      CLAIM YOUR VALENTINE DISCOUNT 💘
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ===== SETTINGS =====
+  const TELEGRAM_LINK = "https://t.me/mickeydonaibot";
+  const SHOW_VALENTINE_ONCE_PER_DAY = false; // always show on every refresh
+
+  const disclaimerOverlay = document.getElementById("disclaimerOverlay");
+  const disclaimerAgreeBtn = document.getElementById("disclaimerAgreeBtn");
+
+  const promoOverlay  = document.getElementById("promoOverlay");
+  const promoTimerEl  = document.getElementById("promoTimer");
+  const promoCloseBtn = document.getElementById("promoCloseBtn");
+  const promoCtaBtn   = document.getElementById("promoCtaBtn");
+
+  if(promoCtaBtn){
+    promoCtaBtn.addEventListener("click", () => window.open(TELEGRAM_LINK, "_blank"));
+  }
+
+  // End date: Feb 20, 2026 (from today to the 20th of this month)
+  const end = new Date("2026-02-20T23:59:59").getTime();
+
+  function startCountdown(){
+    function tick(){
+      const now = Date.now();
+      const d = end - now;
+
+      if(d <= 0){
+        promoTimerEl.textContent = "00 : 00 : 00";
+        return;
+      }
+
+      const totalSeconds = Math.floor(d / 1000);
+      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2,'0');
+      const mins  = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2,'0');
+      const secs  = String(totalSeconds % 60).padStart(2,'0');
+      promoTimerEl.textContent = hours + " : " + mins + " : " + secs;
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  function showPromo(){
+    promoOverlay.style.display = "flex";
+    startCountdown();
+  }
+
+  function showDisclaimerThenPromo(){
+    // Always show disclaimer first on every reload
+    disclaimerOverlay.style.display = "flex";
+  }
+
+  // Agree disclaimer
+  if(disclaimerAgreeBtn){
+    disclaimerAgreeBtn.addEventListener("click", function(){
+      
+      disclaimerOverlay.style.display = "none";
+      showPromo();
+    });
+  }
+
+  // Close promo
+  if(promoCloseBtn){
+    promoCloseBtn.addEventListener("click", function(){
+      promoOverlay.style.display = "none";
+    });
+  }
+
+  // Run on load
+  window.addEventListener("load", showDisclaimerThenPromo);
+})();
+</script>
+
+  <script src="support-widget.js"></script>
+</body>
+</html>
