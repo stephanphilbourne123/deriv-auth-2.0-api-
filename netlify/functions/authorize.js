@@ -12,7 +12,8 @@ function makeDerivRequest(payload) {
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData)
-      }
+      },
+      timeout: 10000
     };
 
     const req = https.request(options, (res) => {
@@ -20,61 +21,95 @@ function makeDerivRequest(payload) {
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
         try {
-          resolve(JSON.parse(data));
+          const parsed = JSON.parse(data);
+          resolve(parsed);
         } catch (e) {
-          reject(new Error('Invalid JSON response: ' + data));
+          reject(new Error(`Invalid JSON from Deriv: ${data.substring(0, 100)}`));
         }
       });
     });
 
-    req.on('error', (error) => { reject(error); });
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Deriv API timeout'));
+    });
+    
     req.write(postData);
     req.end();
   });
 }
 
 exports.handler = async (event, context) => {
-  try {
-    if (event.httpMethod !== 'POST') {
-      return {
-        statusCode: 405,
-        body: JSON.stringify({ error: 'Method not allowed' })
-      };
-    }
+  console.log('authorize function called');
+  console.log('Method:', event.httpMethod);
+  console.log('Headers:', event.headers);
 
-    const { token } = JSON.parse(event.body || '{}');
+  // Handle OPTIONS requests for CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ success: true })
+    };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
+  }
+
+  try {
+    const body = JSON.parse(event.body || '{}');
+    const { token } = body;
+    
+    console.log('Token received:', !!token);
     
     if (!token) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Token is required' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: 'Token is required' })
       };
     }
 
-    console.log('Authorizing token...');
+    console.log('Making request to Deriv...');
     const authResponse = await makeDerivRequest({ authorize: token });
-    console.log('Auth response:', authResponse);
+    console.log('Auth response received');
 
     if (authResponse.error) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: authResponse.error.message })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: authResponse.error.message })
       };
     }
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
       body: JSON.stringify({
         success: true,
         authorize: authResponse.authorize
       })
     };
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Authorization error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ success: false, error: error.message })
     };
   }
 };

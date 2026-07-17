@@ -12,7 +12,8 @@ function makeDerivRequest(payload) {
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData)
-      }
+      },
+      timeout: 10000
     };
 
     const req = https.request(options, (res) => {
@@ -20,34 +21,62 @@ function makeDerivRequest(payload) {
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
         try {
-          resolve(JSON.parse(data));
+          const parsed = JSON.parse(data);
+          resolve(parsed);
         } catch (e) {
-          reject(new Error('Invalid JSON response: ' + data));
+          reject(new Error(`Invalid JSON from Deriv: ${data.substring(0, 100)}`));
         }
       });
     });
 
-    req.on('error', (error) => { reject(error); });
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Deriv API timeout'));
+    });
+    
     req.write(postData);
     req.end();
   });
 }
 
 exports.handler = async (event, context) => {
-  try {
-    if (event.httpMethod !== 'POST') {
-      return {
-        statusCode: 405,
-        body: JSON.stringify({ error: 'Method not allowed' })
-      };
-    }
+  console.log('balance function called');
+  console.log('Method:', event.httpMethod);
 
-    const { token, loginid } = JSON.parse(event.body || '{}');
+  // Handle OPTIONS requests for CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ success: true })
+    };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
+  }
+
+  try {
+    const body = JSON.parse(event.body || '{}');
+    const { token, loginid } = body;
+    
+    console.log('Token received:', !!token, 'LoginID:', loginid);
     
     if (!token || !loginid) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Token and loginid are required' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: 'Token and loginid are required' })
       };
     }
 
@@ -57,28 +86,33 @@ exports.handler = async (event, context) => {
       balance: 1,
       loginid: loginid
     });
-    console.log('Balance response:', balanceResponse);
+    console.log('Balance response received');
 
     if (balanceResponse.error) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: balanceResponse.error.message })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: balanceResponse.error.message })
       };
     }
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
       body: JSON.stringify({
         success: true,
         balance: balanceResponse.balance
       })
     };
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Balance error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ success: false, error: error.message })
     };
   }
 };
