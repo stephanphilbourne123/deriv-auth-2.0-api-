@@ -12,11 +12,16 @@ function makeDerivRequest(payload, token) {
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData),
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90'
       }
     };
 
+    console.log('Fetching balance from Deriv API');
+    console.log('Headers: Authorization: Bearer [token], Deriv-App-ID: 33wk6T0W5ZsXYqjz3eY90');
+
     const req = https.request(options, (res) => {
+      console.log('Response status:', res.statusCode);
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
@@ -41,7 +46,7 @@ function makeDerivRequest(payload, token) {
 }
 
 exports.handler = async (event, context) => {
-  console.log('balance function called');
+  console.log('=== BALANCE FUNCTION START ===');
 
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -68,6 +73,9 @@ exports.handler = async (event, context) => {
     const body = JSON.parse(event.body || '{}');
     const { token, loginid } = body;
     
+    console.log('Token received:', !!token);
+    console.log('LoginID:', loginid);
+    
     if (!token || !loginid) {
       return {
         statusCode: 400,
@@ -76,18 +84,24 @@ exports.handler = async (event, context) => {
       };
     }
 
+    console.log('Requesting balance for account:', loginid);
     const balanceResponse = await makeDerivRequest({
       balance: 1,
       loginid: loginid
     }, token);
 
+    console.log('Balance response received');
+
     if (balanceResponse.error) {
+      console.error('Error from Deriv:', balanceResponse.error);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ success: false, error: balanceResponse.error.message })
       };
     }
+
+    console.log('Balance retrieved:', balanceResponse.balance?.balance, balanceResponse.balance?.currency);
 
     return {
       statusCode: 200,
@@ -101,7 +115,7 @@ exports.handler = async (event, context) => {
       })
     };
   } catch (error) {
-    console.error('Balance error:', error);
+    console.error('Balance error:', error.message);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
