@@ -17,33 +17,37 @@ function makeDerivRequest(payload, token) {
       }
     };
 
-    console.log('Fetching accounts from Deriv API');
-    console.log('Headers:', {
-      'Authorization': 'Bearer [token]',
-      'Deriv-App-ID': options.headers['Deriv-App-ID'],
-      'Content-Type': 'application/json'
-    });
-
+    console.log('🔌 Connecting to Deriv API...');
+    
     const req = https.request(options, (res) => {
-      console.log('Response status:', res.statusCode);
+      console.log('📨 Response status:', res.statusCode);
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
         try {
           const parsed = JSON.parse(data);
+          console.log('✅ Valid JSON received');
           resolve(parsed);
         } catch (e) {
+          console.error('❌ JSON Parse Error:', e.message);
+          console.error('Raw response:', data.substring(0, 500));
           reject(new Error(`Invalid JSON from Deriv: ${data.substring(0, 100)}`));
         }
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (err) => {
+      console.error('❌ Request Error:', err.message);
+      reject(err);
+    });
+
     req.on('timeout', () => {
+      console.error('❌ Request Timeout');
       req.destroy();
       reject(new Error('Deriv API timeout'));
     });
     
+    req.setTimeout(30000);
     req.write(postData);
     req.end();
   });
@@ -58,7 +62,7 @@ exports.handler = async (event, context) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ success: true })
@@ -74,10 +78,22 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { token } = body;
+    // Get token from Authorization header
+    const authHeader = event.headers['Authorization'] || event.headers['authorization'];
+    console.log('🔑 Auth header received:', !!authHeader);
     
-    console.log('Token received:', !!token);
+    if (!authHeader) {
+      console.error('❌ No Authorization header');
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: 'Authorization header is required' })
+      };
+    }
+
+    // Extract token from "Bearer TOKEN"
+    const token = authHeader.replace('Bearer ', '').trim();
+    console.log('🔑 Token extracted, length:', token.length);
     
     if (!token) {
       return {
@@ -87,15 +103,15 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Requesting account list...');
+    console.log('🚀 Requesting account list from Deriv...');
     const accountsResponse = await makeDerivRequest({
       account_list: 1
     }, token);
 
-    console.log('Account list response received');
+    console.log('✅ Account list received:', accountsResponse.account_list?.length || 0, 'accounts');
 
     if (accountsResponse.error) {
-      console.error('Error from Deriv:', accountsResponse.error);
+      console.error('❌ Deriv API Error:', accountsResponse.error.message);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -103,8 +119,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Accounts found:', accountsResponse.account_list?.length || 0);
-
+    console.log('✅ Accounts fetched successfully!');
     return {
       statusCode: 200,
       headers: {
@@ -117,7 +132,8 @@ exports.handler = async (event, context) => {
       })
     };
   } catch (error) {
-    console.error('Accounts error:', error.message);
+    console.error('❌ Accounts error:', error.message);
+    console.error('Stack:', error.stack);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
