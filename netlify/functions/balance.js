@@ -1,60 +1,6 @@
-const https = require('https');
-
-function makeDerivRequest(payload, token) {
-  return new Promise((resolve, reject) => {
-    const postData = JSON.stringify(payload);
-    
-    const options = {
-      hostname: 'api.deriv.com',
-      port: 443,
-      path: '/api/v3',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData),
-        'Authorization': `Bearer ${token}`,
-        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90'
-      }
-    };
-
-    console.log('🔌 Connecting to Deriv API...');
-    
-    const req = https.request(options, (res) => {
-      console.log('📨 Response status:', res.statusCode);
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          console.log('✅ Valid JSON received');
-          resolve(parsed);
-        } catch (e) {
-          console.error('❌ JSON Parse Error:', e.message);
-          console.error('Raw response:', data.substring(0, 500));
-          reject(new Error(`Invalid JSON from Deriv: ${data.substring(0, 100)}`));
-        }
-      });
-    });
-
-    req.on('error', (err) => {
-      console.error('❌ Request Error:', err.message);
-      reject(err);
-    });
-
-    req.on('timeout', () => {
-      console.error('❌ Request Timeout');
-      req.destroy();
-      reject(new Error('Deriv API timeout'));
-    });
-    
-    req.setTimeout(30000);
-    req.write(postData);
-    req.end();
-  });
-}
-
 exports.handler = async (event, context) => {
   console.log('=== BALANCE FUNCTION START ===');
+  console.log('Method:', event.httpMethod);
 
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -108,24 +54,80 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('🚀 Requesting balance from Deriv...');
-    const balanceResponse = await makeDerivRequest({
-      balance: 1,
-      loginid: loginid
-    }, token);
+    console.log('🚀 Making GET request to Deriv API for balance...');
+    
+    const derivResponse = await fetch(`https://api.derivws.com/trading/v1/accounts/${loginid}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90',
+        'Accept': 'application/json'
+      },
+      redirect: 'manual'
+    });
 
-    console.log('✅ Balance response received');
+    console.log('📨 Response status:', derivResponse.status);
+    
+    const responseText = await derivResponse.text();
+    console.log('📄 Response text length:', responseText.length);
 
-    if (balanceResponse.error) {
-      console.error('❌ Deriv API Error:', balanceResponse.error.message);
+    // Check for redirects
+    if (derivResponse.status >= 300 && derivResponse.status < 400) {
+      console.error('❌ Deriv returned redirect');
       return {
-        statusCode: 401,
+        statusCode: 502,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: false, error: balanceResponse.error.message })
+        body: JSON.stringify({
+          success: false,
+          error: 'Deriv endpoint redirected',
+          derivStatus: derivResponse.status,
+          derivLocation: derivResponse.headers.get('location')
+        })
       };
     }
 
-    console.log('✅ Balance fetched:', balanceResponse.balance?.balance, balanceResponse.balance?.currency);
+    if (!derivResponse.ok) {
+      console.error('❌ Deriv API returned non-ok status');
+      return {
+        statusCode: derivResponse.status,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Deriv balance request failed',
+          derivStatus: derivResponse.status,
+          derivResponse: responseText.slice(0, 500)
+        })
+      };
+    }
+
+    let derivData;
+    try {
+      derivData = JSON.parse(responseText);
+      console.log('✅ Valid JSON received');
+    } catch (e) {
+      console.error('❌ JSON Parse Error:', e.message);
+      return {
+        statusCode: 502,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Deriv returned a non-JSON response',
+          derivStatus: derivResponse.status,
+          derivResponse: responseText.slice(0, 500)
+        })
+      };
+    }
+
+    if (derivData.error) {
+      console.error('❌ Deriv API Error:', derivData.error.message || derivData.error);
+      return {
+        statusCode: 401,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: derivData.error.message || derivData.error })
+      };
+    }
+
+    console.log('✅ Balance fetched successfully!');
     return {
       statusCode: 200,
       headers: {
@@ -134,7 +136,7 @@ exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         success: true,
-        balance: balanceResponse.balance
+        balance: derivData
       })
     };
   } catch (error) {
