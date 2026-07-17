@@ -12,11 +12,20 @@ function makeDerivRequest(payload, token) {
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData),
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90'
       }
     };
 
+    console.log('Fetching accounts from Deriv API');
+    console.log('Headers:', {
+      'Authorization': 'Bearer [token]',
+      'Deriv-App-ID': options.headers['Deriv-App-ID'],
+      'Content-Type': 'application/json'
+    });
+
     const req = https.request(options, (res) => {
+      console.log('Response status:', res.statusCode);
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
@@ -41,7 +50,7 @@ function makeDerivRequest(payload, token) {
 }
 
 exports.handler = async (event, context) => {
-  console.log('accounts function called');
+  console.log('=== ACCOUNTS FUNCTION START ===');
 
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -68,6 +77,8 @@ exports.handler = async (event, context) => {
     const body = JSON.parse(event.body || '{}');
     const { token } = body;
     
+    console.log('Token received:', !!token);
+    
     if (!token) {
       return {
         statusCode: 400,
@@ -76,17 +87,23 @@ exports.handler = async (event, context) => {
       };
     }
 
+    console.log('Requesting account list...');
     const accountsResponse = await makeDerivRequest({
       account_list: 1
     }, token);
 
+    console.log('Account list response received');
+
     if (accountsResponse.error) {
+      console.error('Error from Deriv:', accountsResponse.error);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ success: false, error: accountsResponse.error.message })
       };
     }
+
+    console.log('Accounts found:', accountsResponse.account_list?.length || 0);
 
     return {
       statusCode: 200,
@@ -100,7 +117,7 @@ exports.handler = async (event, context) => {
       })
     };
   } catch (error) {
-    console.error('Accounts error:', error);
+    console.error('Accounts error:', error.message);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
