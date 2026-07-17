@@ -229,8 +229,9 @@
         const accountsList = document.getElementById('accountsList');
         const errorMsg = document.getElementById('errorMsg');
         
+        // Get token from sessionStorage
         token = sessionStorage.getItem('deriv_token');
-        console.log('Token from sessionStorage:', !!token);
+        console.log('🔑 Token retrieved from sessionStorage:', !!token);
         
         if (!token) {
           errorMsg.style.display = 'block';
@@ -240,15 +241,17 @@
           return;
         }
 
-        console.log('Authorizing with backend...');
+        console.log('🔐 Authorizing with Deriv API...');
         const authResponse = await fetch('/.netlify/functions/authorize', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ token: token })
         });
         
         const authData = await authResponse.json();
-        console.log('Auth response:', authData);
+        console.log('✅ Auth response:', authData);
         
         if (!authData.success) {
           throw new Error(authData.error || 'Failed to authorize');
@@ -256,16 +259,19 @@
 
         if (authData.authorize) {
           sessionStorage.setItem('deriv_user_id', authData.authorize.user_id);
+          console.log('👤 User ID:', authData.authorize.user_id);
           
-          console.log('Fetching accounts from backend...');
+          console.log('📊 Fetching accounts from Deriv...');
           const accountsResponse = await fetch('/.netlify/functions/accounts', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ token: token })
           });
           
           const accountsData = await accountsResponse.json();
-          console.log('Accounts response:', accountsData);
+          console.log('✅ Accounts response:', accountsData);
           
           if (!accountsData.success) {
             throw new Error(accountsData.error || 'Failed to fetch accounts');
@@ -273,6 +279,7 @@
 
           if (accountsData.account_list && Array.isArray(accountsData.account_list)) {
             accounts = accountsData.account_list;
+            console.log('📈 Found', accounts.length, 'accounts');
             
             if (accounts.length === 0) {
               errorMsg.style.display = 'block';
@@ -288,7 +295,7 @@
           }
         }
       } catch (error) {
-        console.error('Error loading accounts:', error);
+        console.error('❌ Error loading accounts:', error);
         const errorMsg = document.getElementById('errorMsg');
         const accountsList = document.getElementById('accountsList');
         errorMsg.style.display = 'block';
@@ -298,12 +305,14 @@
     }
 
     async function fetchBalancesForAllAccounts(token, accounts) {
-      console.log('Fetching balances for', accounts.length, 'accounts...');
+      console.log('💰 Fetching balances for', accounts.length, 'accounts...');
       for (const account of accounts) {
         try {
           const balanceResponse = await fetch('/.netlify/functions/balance', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
               token: token,
               loginid: account.loginid
@@ -311,7 +320,7 @@
           });
           
           const balanceData = await balanceResponse.json();
-          console.log('Balance for', account.loginid, ':', balanceData);
+          console.log('✅ Balance for', account.loginid, ':', balanceData);
           
           if (balanceData.success && balanceData.balance) {
             accountBalances[account.loginid] = {
@@ -319,14 +328,14 @@
               currency: balanceData.balance.currency
             };
           } else if (balanceData.error) {
-            console.warn('Error fetching balance for', account.loginid, ':', balanceData.error);
+            console.warn('⚠️ Error fetching balance for', account.loginid, ':', balanceData.error);
             accountBalances[account.loginid] = {
               amount: 0,
               currency: account.currency || 'USD'
             };
           }
         } catch (error) {
-          console.error('Error fetching balance for', account.loginid, ':', error);
+          console.error('❌ Error fetching balance for', account.loginid, ':', error);
           accountBalances[account.loginid] = {
             amount: 0,
             currency: account.currency || 'USD'
@@ -404,13 +413,13 @@
         };
         sessionStorage.setItem('selected_account', JSON.stringify(accountData));
         sessionStorage.setItem('deriv_token', token);
-        console.log('Saved to sessionStorage:', accountData);
-        console.log('Token saved:', !!token);
+        console.log('✅ Saved to sessionStorage:', accountData);
+        console.log('🔑 Token saved:', !!token);
         
         await new Promise(resolve => setTimeout(resolve, 500));
         window.location.href = '/app/?account=' + selectedAccount.loginid;
       } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error:', error);
         continueBtn.disabled = false;
         continueBtn.textContent = 'Continue';
       }
