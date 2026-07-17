@@ -1,7 +1,7 @@
 /**
  * Deriv OAuth 2.0 Callback Handler
  * This function processes the OAuth redirect from Deriv and exchanges code for access token
- * Then redirects back to deriv-login.html with the token in URL parameters
+ * Then redirects back to homepage with the token
  */
 
 const https = require('https');
@@ -85,7 +85,6 @@ exports.handler = async (event, context) => {
   console.log('Query String Parameters:', event.queryStringParameters);
   console.log('Timestamp:', new Date().toISOString());
 
-  // Only accept GET requests
   if (event.httpMethod !== 'GET') {
     console.warn('❌ Invalid HTTP method:', event.httpMethod);
     return {
@@ -103,31 +102,27 @@ exports.handler = async (event, context) => {
   console.log('- Error:', error || 'none');
   console.log('- State:', state);
 
-  // Handle OAuth error response
   if (error) {
     console.error('❌ OAuth Error from Deriv:', error, error_description);
     return {
-      statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        success: false,
-        error: error,
-        message: error_description || 'OAuth authorization failed'
-      })
+      statusCode: 302,
+      headers: {
+        'Location': '/?oauth_error=' + encodeURIComponent(error),
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      },
+      body: ''
     };
   }
 
-  // Check for authorization code
   if (!code) {
     console.error('❌ No authorization code received');
     return {
-      statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        success: false,
-        error: 'missing_code',
-        message: 'No authorization code provided by Deriv'
-      })
+      statusCode: 302,
+      headers: {
+        'Location': '/?oauth_error=missing_code',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      },
+      body: ''
     };
   }
 
@@ -142,17 +137,15 @@ exports.handler = async (event, context) => {
     console.log('Client Secret:', clientSecret ? '✅ present' : '❌ MISSING');
     console.log('Redirect URI:', redirectUri);
 
-    // Validate credentials
     if (!clientId || !clientSecret) {
       console.error('❌ Missing Deriv OAuth credentials in environment variables');
       return {
-        statusCode: 500,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'server_error',
-          message: 'Server OAuth credentials not configured'
-        })
+        statusCode: 302,
+        headers: {
+          'Location': '/?oauth_error=server_error',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        },
+        body: ''
       };
     }
 
@@ -161,33 +154,29 @@ exports.handler = async (event, context) => {
 
     console.log('\n--- Token Exchange Response ---');
     
-    // Check for errors in token response
     if (tokenResponse.error) {
       console.error('❌ Token Exchange Error:', tokenResponse.error);
       console.error('Error Description:', tokenResponse.error_description);
       return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: tokenResponse.error,
-          message: tokenResponse.error_description || 'Failed to exchange authorization code for token'
-        })
+        statusCode: 302,
+        headers: {
+          'Location': '/?oauth_error=' + encodeURIComponent(tokenResponse.error),
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        },
+        body: ''
       };
     }
 
-    // Validate access token
     if (!tokenResponse.access_token) {
       console.error('❌ No access token in response');
       console.error('Response:', tokenResponse);
       return {
-        statusCode: 500,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'invalid_response',
-          message: 'No access token received from Deriv'
-        })
+        statusCode: 302,
+        headers: {
+          'Location': '/?oauth_error=invalid_response',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        },
+        body: ''
       };
     }
 
@@ -195,30 +184,25 @@ exports.handler = async (event, context) => {
     console.log('Access Token:', tokenResponse.access_token.substring(0, 20) + '...');
     console.log('Token Type:', tokenResponse.token_type || 'Bearer');
     console.log('Expires In:', tokenResponse.expires_in || 'unknown');
-    console.log('Scope:', tokenResponse.scope || 'read write');
 
-    // Build redirect URL back to deriv-login.html with token
-    const loginPageUrl = new URL('https://mickeysmartaibot.netlify.app/app/deriv-login.html');
-    loginPageUrl.searchParams.set('token', tokenResponse.access_token);
-    loginPageUrl.searchParams.set('token_type', tokenResponse.token_type || 'Bearer');
+    // Redirect to homepage with token in URL so it can be saved
+    const homeUrl = new URL('https://mickeysmartaibot.netlify.app/');
+    homeUrl.searchParams.set('token', tokenResponse.access_token);
+    homeUrl.searchParams.set('token_type', tokenResponse.token_type || 'Bearer');
     if (tokenResponse.expires_in) {
-      loginPageUrl.searchParams.set('expires_in', tokenResponse.expires_in);
+      homeUrl.searchParams.set('expires_in', tokenResponse.expires_in);
     }
 
-    console.log('\n--- Redirecting Back ---');
-    console.log('Redirect URL:', loginPageUrl.toString().substring(0, 100) + '...');
+    console.log('\n--- Redirecting Back to Homepage ---');
+    console.log('Redirect URL:', homeUrl.toString().substring(0, 100) + '...');
 
     return {
       statusCode: 302,
       headers: {
-        'Location': loginPageUrl.toString(),
-        'Content-Type': 'application/json',
+        'Location': homeUrl.toString(),
         'Cache-Control': 'no-cache, no-store, must-revalidate'
       },
-      body: JSON.stringify({ 
-        success: true, 
-        message: 'Token exchanged successfully. Redirecting...' 
-      })
+      body: ''
     };
 
   } catch (error) {
@@ -228,14 +212,12 @@ exports.handler = async (event, context) => {
     console.error('Stack Trace:', error.stack);
 
     return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        success: false,
-        error: 'server_error',
-        message: error.message || 'An error occurred during OAuth callback processing',
-        timestamp: new Date().toISOString()
-      })
+      statusCode: 302,
+      headers: {
+        'Location': '/?oauth_error=server_error',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      },
+      body: ''
     };
   }
 };
