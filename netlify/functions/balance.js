@@ -17,29 +17,37 @@ function makeDerivRequest(payload, token) {
       }
     };
 
-    console.log('Fetching balance from Deriv API');
-    console.log('Headers: Authorization: Bearer [token], Deriv-App-ID: 33wk6T0W5ZsXYqjz3eY90');
-
+    console.log('🔌 Connecting to Deriv API...');
+    
     const req = https.request(options, (res) => {
-      console.log('Response status:', res.statusCode);
+      console.log('📨 Response status:', res.statusCode);
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
         try {
           const parsed = JSON.parse(data);
+          console.log('✅ Valid JSON received');
           resolve(parsed);
         } catch (e) {
+          console.error('❌ JSON Parse Error:', e.message);
+          console.error('Raw response:', data.substring(0, 500));
           reject(new Error(`Invalid JSON from Deriv: ${data.substring(0, 100)}`));
         }
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (err) => {
+      console.error('❌ Request Error:', err.message);
+      reject(err);
+    });
+
     req.on('timeout', () => {
+      console.error('❌ Request Timeout');
       req.destroy();
       reject(new Error('Deriv API timeout'));
     });
     
+    req.setTimeout(30000);
     req.write(postData);
     req.end();
   });
@@ -47,6 +55,7 @@ function makeDerivRequest(payload, token) {
 
 exports.handler = async (event, context) => {
   console.log('=== BALANCE FUNCTION START ===');
+  console.log('Event body:', event.body);
 
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -71,10 +80,12 @@ exports.handler = async (event, context) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { token, loginid } = body;
+    const token = body.token;
+    const loginid = body.loginid;
     
-    console.log('Token received:', !!token);
-    console.log('LoginID:', loginid);
+    console.log('🔑 Token received:', !!token);
+    console.log('📏 Token length:', token ? token.length : 0);
+    console.log('👤 LoginID:', loginid);
     
     if (!token || !loginid) {
       return {
@@ -84,16 +95,16 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Requesting balance for account:', loginid);
+    console.log('🚀 Requesting balance from Deriv...');
     const balanceResponse = await makeDerivRequest({
       balance: 1,
       loginid: loginid
     }, token);
 
-    console.log('Balance response received');
+    console.log('✅ Balance response received');
 
     if (balanceResponse.error) {
-      console.error('Error from Deriv:', balanceResponse.error);
+      console.error('❌ Deriv API Error:', balanceResponse.error);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -101,8 +112,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Balance retrieved:', balanceResponse.balance?.balance, balanceResponse.balance?.currency);
-
+    console.log('✅ Balance fetched:', balanceResponse.balance?.balance, balanceResponse.balance?.currency);
     return {
       statusCode: 200,
       headers: {
@@ -115,7 +125,8 @@ exports.handler = async (event, context) => {
       })
     };
   } catch (error) {
-    console.error('Balance error:', error.message);
+    console.error('❌ Balance error:', error.message);
+    console.error('Stack:', error.stack);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
