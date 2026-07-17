@@ -1,3 +1,5 @@
+const WebSocket = require('ws');
+
 exports.handler = async (event, context) => {
   console.log('=== BALANCE FUNCTION START ===');
   console.log('Method:', event.httpMethod);
@@ -54,76 +56,15 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('🚀 Making GET request to Deriv API for balance...');
+    console.log('🚀 Connecting to Deriv WebSocket for balance...');
     
-    const derivResponse = await fetch(`https://api.derivws.com/trading/v1/accounts/${loginid}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90',
-        'Accept': 'application/json'
-      },
-      redirect: 'manual'
-    });
-
-    console.log('📨 Response status:', derivResponse.status);
+    const result = await getBalanceWithWebSocket(token, loginid);
     
-    const responseText = await derivResponse.text();
-    console.log('📄 Response text length:', responseText.length);
-
-    // Check for redirects
-    if (derivResponse.status >= 300 && derivResponse.status < 400) {
-      console.error('❌ Deriv returned redirect');
-      return {
-        statusCode: 502,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'Deriv endpoint redirected',
-          derivStatus: derivResponse.status,
-          derivLocation: derivResponse.headers.get('location')
-        })
-      };
-    }
-
-    if (!derivResponse.ok) {
-      console.error('❌ Deriv API returned non-ok status');
-      return {
-        statusCode: derivResponse.status,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'Deriv balance request failed',
-          derivStatus: derivResponse.status,
-          derivResponse: responseText.slice(0, 500)
-        })
-      };
-    }
-
-    let derivData;
-    try {
-      derivData = JSON.parse(responseText);
-      console.log('✅ Valid JSON received');
-    } catch (e) {
-      console.error('❌ JSON Parse Error:', e.message);
-      return {
-        statusCode: 502,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'Deriv returned a non-JSON response',
-          derivStatus: derivResponse.status,
-          derivResponse: responseText.slice(0, 500)
-        })
-      };
-    }
-
-    if (derivData.error) {
-      console.error('❌ Deriv API Error:', derivData.error.message || derivData.error);
+    if (!result.success) {
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: false, error: derivData.error.message || derivData.error })
+        body: JSON.stringify({ success: false, error: result.error })
       };
     }
 
@@ -136,7 +77,7 @@ exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         success: true,
-        balance: derivData
+        balance: result.data
       })
     };
   } catch (error) {
@@ -149,3 +90,66 @@ exports.handler = async (event, context) => {
     };
   }
 };
+
+function getBalanceWithWebSocket(token, loginid) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket('wss://ws.derivws.com/websockets/v3');
+    let balanceData = null;
+    let authorized = false;
+    const timeout = setTimeout(() => {
+      ws.close();
+      reject(new Error('WebSocket balance request timeout'));
+    }, 10000);
+
+    ws.on('open', () => {
+      console.log('📡 WebSocket connected');
+      // Send authorize message first
+      ws.send(JSON.stringify({ authorize: token }));
+    });
+
+    ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data);
+        console.log('📨 WebSocket message:', JSON.stringify(message).slice(0, 200));
+        
+        if (message.authorize && !authorized) {
+          authorized = true;
+          console.log('✅ Authorized, requesting balance for', loginid);
+          // Now request balance
+          ws.send(JSON.stringify({ 
+            balance: 1,
+            loginid: loginid,
+            req_id: 1
+          }));
+        } else if (message.balance) {
+          balanceData = message.balance;
+          console.log('✅ Balance data received');
+          ws.close();
+          clearTimeout(timeout);
+          resolve({ success: true, data: message.balance });
+        } else if (message.error) {
+          console.error('❌ Error:', message.error);
+          ws.close();
+          clearTimeout(timeout);
+          resolve({ success: false, error: message.error });
+        }
+      } catch (e) {
+        console.error('❌ Message parse error:', e.message);
+      }
+    });
+
+    ws.on('error', (error) => {
+      console.error('❌ WebSocket error:', error.message);
+      clearTimeout(timeout);
+      reject(error);
+    });
+
+    ws.on('close', () => {
+      console.log('📡 WebSocket closed');
+      clearTimeout(timeout);
+      if (!balanceData && authorized) {
+        reject(new Error('WebSocket closed without receiving balance'));
+      }
+    });
+  });
+}
