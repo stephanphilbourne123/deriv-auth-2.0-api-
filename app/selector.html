@@ -221,6 +221,51 @@
       });
     });
 
+    function clearDerivSession() {
+      token = null;
+
+      const keys = [
+        'deriv_token',
+        'deriv_user_id',
+        'selected_account',
+        'access_token',
+        'oauth_token'
+      ];
+
+      keys.forEach(key => {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+      });
+    }
+
+    async function readJsonResponse(response) {
+      const responseText = await response.text();
+
+      try {
+        return responseText ? JSON.parse(responseText) : {};
+      } catch {
+        return {
+          success: false,
+          error: `Server returned an invalid response (${response.status})`
+        };
+      }
+    }
+
+    async function handleExpiredToken(message) {
+      clearDerivSession();
+
+      const errorMsg = document.getElementById('errorMsg');
+      const accountsList = document.getElementById('accountsList');
+
+      errorMsg.style.display = 'block';
+      errorMsg.textContent = `❌ ${message || 'Your Deriv session is invalid or expired. Please connect again.'}`;
+      accountsList.innerHTML = '';
+
+      setTimeout(() => {
+        window.location.replace('/');
+      }, 1800);
+    }
+
     async function loadAccounts() {
       if (loadingStarted) return;
       loadingStarted = true;
@@ -229,15 +274,11 @@
         const accountsList = document.getElementById('accountsList');
         const errorMsg = document.getElementById('errorMsg');
         
-        // Get token from sessionStorage
         token = sessionStorage.getItem('deriv_token');
-        console.log('🔑 Token retrieved from sessionStorage:', !!token);
-        
+        console.log('🔑 Token retrieved from sessionStorage:', Boolean(token));
+
         if (!token) {
-          errorMsg.style.display = 'block';
-          errorMsg.textContent = '❌ No authentication token found. Please log in again.';
-          accountsList.innerHTML = '';
-          setTimeout(() => window.location.href = '/', 2500);
+          await handleExpiredToken('No authentication token was found. Please connect your Deriv account again.');
           return;
         }
 
@@ -247,14 +288,22 @@
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          }
+          },
+          cache: 'no-store'
         });
-        
-        const authData = await authResponse.json();
-        console.log('✅ Auth response:', authData);
-        
-        if (!authData.success) {
-          throw new Error(authData.error || 'Failed to authorize');
+
+        const authData = await readJsonResponse(authResponse);
+        console.log('✅ Auth response status:', authResponse.status);
+
+        if (authResponse.status === 401 || authResponse.status === 403) {
+          await handleExpiredToken(
+            authData.error || 'Your Deriv token is invalid, expired, or does not have permission.'
+          );
+          return;
+        }
+
+        if (!authResponse.ok || !authData.success) {
+          throw new Error(authData.error || `Failed to authorize (${authResponse.status})`);
         }
 
         if (authData.authorize) {
@@ -270,7 +319,7 @@
             }
           });
           
-          const accountsData = await accountsResponse.json();
+          const accountsData = await readJsonResponse(accountsResponse);
           console.log('✅ Accounts response:', accountsData);
           
           if (!accountsData.success) {
@@ -319,8 +368,15 @@
             })
           });
           
-          const balanceData = await balanceResponse.json();
-          console.log('✅ Balance for', account.loginid, ':', balanceData);
+          const balanceData = await readJsonResponse(balanceResponse);
+          console.log('✅ Balance response for', account.loginid, ':', balanceResponse.status);
+
+          if (balanceResponse.status === 401 || balanceResponse.status === 403) {
+            await handleExpiredToken(
+              balanceData.error || 'Your Deriv session expired while loading balances.'
+            );
+            return;
+          }
           
           if (balanceData.success && balanceData.balance) {
             accountBalances[account.loginid] = {
@@ -426,8 +482,8 @@
     }
 
     function logout() {
-      sessionStorage.clear();
-      window.location.href = '/';
+      clearDerivSession();
+      window.location.replace('/');
     }
 
     document.getElementById('continueBtn').onclick = continueToApp;
