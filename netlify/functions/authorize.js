@@ -17,15 +17,10 @@ function makeDerivRequest(payload, token) {
       }
     };
 
-    console.log('Making request to Deriv API with bearer token');
-    console.log('Headers:', {
-      'Authorization': 'Bearer [token]',
-      'Deriv-App-ID': options.headers['Deriv-App-ID'],
-      'Content-Type': 'application/json'
-    });
+    console.log('🔌 Connecting to Deriv API...');
     
     const req = https.request(options, (res) => {
-      console.log('Response status:', res.statusCode);
+      console.log('📨 Response status:', res.statusCode);
       
       let data = '';
       
@@ -36,19 +31,28 @@ function makeDerivRequest(payload, token) {
       res.on('end', () => {
         try {
           const parsed = JSON.parse(data);
+          console.log('✅ Valid JSON received');
           resolve(parsed);
         } catch (e) {
+          console.error('❌ JSON Parse Error:', e.message);
+          console.error('Raw response:', data.substring(0, 500));
           reject(new Error(`Invalid JSON from Deriv: ${data.substring(0, 200)}`));
         }
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (err) => {
+      console.error('❌ Request Error:', err.message);
+      reject(err);
+    });
+
     req.on('timeout', () => {
+      console.error('❌ Request Timeout');
       req.destroy();
       reject(new Error('Deriv API timeout'));
     });
     
+    req.setTimeout(30000);
     req.write(postData);
     req.end();
   });
@@ -57,6 +61,7 @@ function makeDerivRequest(payload, token) {
 exports.handler = async (event, context) => {
   console.log('=== AUTHORIZE FUNCTION START ===');
   console.log('Method:', event.httpMethod);
+  console.log('Event body:', event.body);
 
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -81,9 +86,10 @@ exports.handler = async (event, context) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { token } = body;
+    const token = body.token;
     
-    console.log('Token received:', !!token);
+    console.log('🔑 Token received:', !!token);
+    console.log('📏 Token length:', token ? token.length : 0);
     
     if (!token) {
       return {
@@ -93,11 +99,12 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Making request to Deriv...');
+    console.log('🚀 Making authorize request to Deriv...');
     const authResponse = await makeDerivRequest({ authorize: 1 }, token);
-    console.log('Auth response received');
+    console.log('✅ Auth response received:', JSON.stringify(authResponse).substring(0, 200));
 
     if (authResponse.error) {
+      console.error('❌ Deriv API Error:', authResponse.error);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -105,6 +112,7 @@ exports.handler = async (event, context) => {
       };
     }
 
+    console.log('✅ Authorization successful!');
     return {
       statusCode: 200,
       headers: {
@@ -117,7 +125,8 @@ exports.handler = async (event, context) => {
       })
     };
   } catch (error) {
-    console.error('Authorization error:', error.message);
+    console.error('❌ Authorization error:', error.message);
+    console.error('Stack:', error.stack);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
