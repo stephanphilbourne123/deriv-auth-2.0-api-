@@ -1,1 +1,428 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Mickey Smart AI — Account Selector</title><style>* { margin: 0; padding: 0; box-sizing: border-box; }html, body { height: 100%; }body {font-family: Inter, system-ui, Segoe UI, Roboto, sans-serif;color: #ffffff;background: linear-gradient(135deg, #00c6ff, #0072ff, #6a11cb);background-size: 260% 260%;animation: bgShift 18s ease-in-out infinite;display: flex;align-items: center;justify-content: center;min-height: 100vh;padding: 20px;}@keyframes bgShift {0% { background-position: 0% 50%; }50% { background-position: 100% 50%; }100% { background-position: 0% 50%; }}.account-selector {width: min(600px, 100%);background: rgba(15, 28, 63, 0.95);border-radius: 20px;border: 1px solid rgba(255, 255, 255, 0.18);padding: 40px 30px;text-align: center;box-shadow: 0 22px 55px rgba(0, 0, 0, 0.8);}.selector-head {display: flex;align-items: center;justify-content: center;gap: 12px;margin-bottom: 10px;}.selector-icon {font-size: 32px;}.selector-title {font-size: 24px;font-weight: 800;}.selector-sub {font-size: 14px;color: #bcdcff;margin-bottom: 20px;}.filter-tabs {display: flex;gap: 10px;margin-bottom: 20px;justify-content: center;}.filter-tab {padding: 8px 16px;border-radius: 8px;border: 1px solid rgba(255, 255, 255, 0.2);background: rgba(255, 255, 255, 0.06);color: #bcdcff;cursor: pointer;font-weight: 600;font-size: 13px;transition: all 0.2s ease;}.filter-tab.active {background: linear-gradient(90deg, #00e0ff, #3a7bff);border-color: rgba(0, 224, 255, 0.5);color: #ffffff;}.filter-tab:hover {border-color: rgba(0, 224, 255, 0.5);}.accounts-list {display: grid;gap: 12px;margin-bottom: 20px;}.account-item {background: rgba(255, 255, 255, 0.06);border: 1px solid rgba(255, 255, 255, 0.14);border-radius: 14px;padding: 16px;cursor: pointer;transition: all 0.2s ease;display: flex;align-items: center;justify-content: space-between;}.account-item:hover {background: rgba(255, 255, 255, 0.10);border-color: rgba(0, 198, 255, 0.5);box-shadow: 0 0 18px rgba(0, 198, 255, 0.2);}.account-item.selected {border-color: rgba(34, 224, 138, 0.95);background: rgba(34, 224, 138, 0.15);box-shadow: 0 0 18px rgba(34, 224, 138, 0.3);}.account-icon {width: 40px;height: 40px;border-radius: 10px;background: rgba(0, 224, 255, 0.2);display: flex;align-items: center;justify-content: center;font-size: 18px;margin-right: 12px;flex-shrink: 0;}.account-info {text-align: left;flex: 1;}.account-id {font-weight: 700;font-size: 16px;}.account-type {font-size: 12px;color: #bcdcff;margin-top: 4px;display: flex;gap: 8px;align-items: center;}.account-badge {display: inline-block;padding: 4px 8px;border-radius: 6px;font-size: 11px;font-weight: 700;text-transform: uppercase;letter-spacing: 1px;}.badge-demo {background: rgba(100, 150, 255, 0.3);color: #64d4ff;}.badge-live {background: rgba(34, 224, 138, 0.3);color: #22e08a;}.account-balance {text-align: right;display: flex;flex-direction: column;align-items: flex-end;gap: 4px;}.balance-amount {font-size: 16px;font-weight: 700;color: #22e08a;}.arrow {font-size: 18px;color: rgba(255, 255, 255, 0.5);margin-left: 10px;}.selector-action {display: flex;gap: 10px;}.btn {flex: 1;padding: 12px;border: none;border-radius: 10px;font-weight: 700;font-size: 14px;cursor: pointer;transition: 0.2s ease;}.btn.confirm {background: linear-gradient(90deg, #22e08a, #0bbf56);color: #06130b;}.btn.confirm:disabled {opacity: 0.5;cursor: not-allowed;}.btn.cancel {background: rgba(255, 255, 255, 0.1);border: 1px solid rgba(255, 255, 255, 0.2);color: #ffffff;}.loading {display: flex;align-items: center;justify-content: center;gap: 10px;font-size: 14px;}.spinner {width: 16px;height: 16px;border: 2px solid rgba(0, 198, 255, 0.2);border-top-color: #00c6ff;border-radius: 50%;animation: spin 1s linear infinite;}@keyframes spin {to { transform: rotate(360deg); }}.error {background: rgba(255, 77, 109, 0.1);border: 1px solid rgba(255, 77, 109, 0.3);border-radius: 10px;padding: 12px;color: #ff6b9d;margin-bottom: 16px;font-size: 13px;}</style></head><body><div class="account-selector" id="accountSelector"><div class="selector-head"><div class="selector-icon">✓</div><div class="selector-title">Authentication Successful</div></div><div class="selector-sub">Select an account to start trading</div><div id="errorMsg" class="error" style="display: none;"></div><div class="filter-tabs"><button class="filter-tab active" data-filter="all">All Accounts</button><button class="filter-tab" data-filter="demo">Demo</button><button class="filter-tab" data-filter="live">Live</button></div><div class="accounts-list" id="accountsList"><div class="loading"><div class="spinner"></div>Loading accounts...</div></div><div class="selector-action"><button class="btn cancel" onclick="logout()">Cancel</button><button class="btn confirm" id="continueBtn" disabled>Continue</button></div></div><script>let selectedAccount = null;let accounts = [];let accountBalances = {};let currentFilter = 'all';let token = null;let loadingStarted = false;document.querySelectorAll('.filter-tab').forEach(tab => {tab.addEventListener('click', function() {document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));this.classList.add('active');currentFilter = this.dataset.filter;displayAccounts(accounts);});});async function loadAccounts() {if (loadingStarted) return;loadingStarted = true;try {const accountsList = document.getElementById('accountsList');const errorMsg = document.getElementById('errorMsg');token = sessionStorage.getItem('deriv_token');console.log('Token from sessionStorage:', !!token);if (!token) {errorMsg.style.display = 'block';errorMsg.textContent = '❌ No authentication token found. Please log in again.';accountsList.innerHTML = '';setTimeout(() => window.location.href = '/', 2500);return;}console.log('Authorizing with backend...');const authResponse = await fetch('/.netlify/functions/authorize', {method: 'POST',headers: { 'Content-Type': 'application/json' },body: JSON.stringify({ token: token }),});const authData = await authResponse.json();console.log('Auth response:', authData);if (!authData.success) {throw new Error(authData.error || 'Failed to authorize');}if (authData.authorize) {sessionStorage.setItem('deriv_user_id', authData.authorize.user_id);console.log('Fetching accounts from backend...');const accountsResponse = await fetch('/.netlify/functions/accounts', {method: 'POST',headers: { 'Content-Type': 'application/json' },body: JSON.stringify({ token: token }),});const accountsData = await accountsResponse.json();console.log('Accounts response:', accountsData);if (!accountsData.success) {throw new Error(accountsData.error || 'Failed to fetch accounts');}if (accountsData.account_list && Array.isArray(accountsData.account_list)) {accounts = accountsData.account_list;if (accounts.length === 0) {errorMsg.style.display = 'block';errorMsg.textContent = '⚠️ No trading accounts found. Please create an account on Deriv first.';accountsList.innerHTML = '';return;}await fetchBalancesForAllAccounts(token, accounts);displayAccounts(accounts);} else {throw new Error('No account list returned');}} catch (error) {console.error('Error loading accounts:', error);const errorMsg = document.getElementById('errorMsg');const accountsList = document.getElementById('accountsList');errorMsg.style.display = 'block';errorMsg.textContent = '❌ ' + error.message;accountsList.innerHTML = '';}}async function fetchBalancesForAllAccounts(token, accounts) {console.log('Fetching balances for', accounts.length, 'accounts...');for (const account of accounts) {try {const balanceResponse = await fetch('/.netlify/functions/balance', {method: 'POST',headers: { 'Content-Type': 'application/json' },body: JSON.stringify({token: token,loginid: account.loginid,}),});const balanceData = await balanceResponse.json();console.log('Balance for', account.loginid, ':', balanceData);if (balanceData.success && balanceData.balance) {accountBalances[account.loginid] = {amount: balanceData.balance.balance,currency: balanceData.balance.currency,};} else if (balanceData.error) {console.warn('Error fetching balance for', account.loginid, ':', balanceData.error);accountBalances[account.loginid] = {amount: 0,currency: account.currency || 'USD',};}} catch (error) {console.error('Error fetching balance for', account.loginid, ':', error);accountBalances[account.loginid] = {amount: 0,currency: account.currency || 'USD',};}}}function displayAccounts(accounts) {const accountsList = document.getElementById('accountsList');accountsList.innerHTML = '';let filteredAccounts = accounts;if (currentFilter === 'demo') {filteredAccounts = accounts.filter(a => a.account_type === 'demo');} else if (currentFilter === 'live') {filteredAccounts = accounts.filter(a => a.account_type !== 'demo');}if (filteredAccounts.length === 0) {accountsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #bcdcff;">No accounts found for this filter.</div>';return;}filteredAccounts.forEach((account) => {const item = document.createElement('div');item.className = 'account-item';item.onclick = () => selectAccount(account, item);const type = account.account_type === 'demo' ? 'DEMO' : 'LIVE';const badgeClass = account.account_type === 'demo' ? 'badge-demo' : 'badge-live';const icon = account.account_type === 'demo' ? '🧪' : '💰';const balance = accountBalances[account.loginid];const balanceAmount = balance ? `${balance.currency} ${balance.amount.toFixed(2)}` : 'Loading...';item.innerHTML = `<div style="display: flex; align-items: center; flex: 1;"><div class="account-icon">${icon}</div><div class="account-info"><div class="account-id">${account.loginid}</div><div class="account-type"><span class="account-badge ${badgeClass}">${type}</span><span>${account.currency}</span></div></div></div><div class="account-balance"><div class="balance-amount">${balanceAmount}</div></div><div class="arrow">→</div>`;accountsList.appendChild(item);});}function selectAccount(account, element) {document.querySelectorAll('.account-item').forEach(el => {el.classList.remove('selected');});element.classList.add('selected');selectedAccount = account;document.getElementById('continueBtn').disabled = false;}async function continueToApp() {if (!selectedAccount || !token) return;const continueBtn = document.getElementById('continueBtn');continueBtn.disabled = true;continueBtn.innerHTML = '<div class="spinner"></div> Loading dashboard...';try {const accountData = {...selectedAccount,balance: accountBalances[selectedAccount.loginid],};sessionStorage.setItem('selected_account', JSON.stringify(accountData));sessionStorage.setItem('deriv_token', token);console.log('Saved to sessionStorage:', accountData);console.log('Token saved:', !!token);await new Promise(resolve => setTimeout(resolve, 500));window.location.href = '/app/?account=' + selectedAccount.loginid;} catch (error) {console.error('Error:', error);continueBtn.disabled = false;continueBtn.textContent = 'Continue';}}function logout() {sessionStorage.clear();window.location.href = '/';}document.getElementById('continueBtn').onclick = continueToApp;window.addEventListener('load', loadAccounts);</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mickey Smart AI — Account Selector</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: Inter, system-ui, Segoe UI, Roboto, sans-serif;
+      color: #ffffff;
+      background: linear-gradient(135deg, #00c6ff, #0072ff, #6a11cb);
+      background-size: 260% 260%;
+      animation: bgShift 18s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    @keyframes bgShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .account-selector {
+      width: min(600px, 100%);
+      background: rgba(15, 28, 63, 0.95);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 22px 55px rgba(0, 0, 0, 0.8);
+    }
+    .selector-head {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .selector-icon { font-size: 32px; }
+    .selector-title { font-size: 24px; font-weight: 800; }
+    .selector-sub { font-size: 14px; color: #bcdcff; margin-bottom: 20px; }
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .filter-tab {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: #bcdcff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    .filter-tab.active {
+      background: linear-gradient(90deg, #00e0ff, #3a7bff);
+      border-color: rgba(0, 224, 255, 0.5);
+      color: #ffffff;
+    }
+    .filter-tab:hover { border-color: rgba(0, 224, 255, 0.5); }
+    .accounts-list {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .account-item {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .account-item:hover {
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(0, 198, 255, 0.5);
+      box-shadow: 0 0 18px rgba(0, 198, 255, 0.2);
+    }
+    .account-item.selected {
+      border-color: rgba(34, 224, 138, 0.95);
+      background: rgba(34, 224, 138, 0.15);
+      box-shadow: 0 0 18px rgba(34, 224, 138, 0.3);
+    }
+    .account-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(0, 224, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .account-info { text-align: left; flex: 1; }
+    .account-id { font-weight: 700; font-size: 16px; }
+    .account-type {
+      font-size: 12px;
+      color: #bcdcff;
+      margin-top: 4px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .account-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .badge-demo { background: rgba(100, 150, 255, 0.3); color: #64d4ff; }
+    .badge-live { background: rgba(34, 224, 138, 0.3); color: #22e08a; }
+    .account-balance {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .balance-amount { font-size: 16px; font-weight: 700; color: #22e08a; }
+    .arrow { font-size: 18px; color: rgba(255, 255, 255, 0.5); margin-left: 10px; }
+    .selector-action { display: flex; gap: 10px; }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .btn.confirm {
+      background: linear-gradient(90deg, #22e08a, #0bbf56);
+      color: #06130b;
+    }
+    .btn.confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.cancel {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 198, 255, 0.2);
+      border-top-color: #00c6ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error {
+      background: rgba(255, 77, 109, 0.1);
+      border: 1px solid rgba(255, 77, 109, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      color: #ff6b9d;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="account-selector" id="accountSelector">
+    <div class="selector-head">
+      <div class="selector-icon">✓</div>
+      <div class="selector-title">Authentication Successful</div>
+    </div>
+    <div class="selector-sub">Select an account to start trading</div>
+    <div id="errorMsg" class="error" style="display: none;"></div>
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="all">All Accounts</button>
+      <button class="filter-tab" data-filter="demo">Demo</button>
+      <button class="filter-tab" data-filter="live">Live</button>
+    </div>
+    <div class="accounts-list" id="accountsList">
+      <div class="loading"><div class="spinner"></div>Loading accounts...</div>
+    </div>
+    <div class="selector-action">
+      <button class="btn cancel" onclick="logout()">Cancel</button>
+      <button class="btn confirm" id="continueBtn" disabled>Continue</button>
+    </div>
+  </div>
+
+  <script>
+    let selectedAccount = null;
+    let accounts = [];
+    let accountBalances = {};
+    let currentFilter = 'all';
+    let token = null;
+    let loadingStarted = false;
+
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.dataset.filter;
+        displayAccounts(accounts);
+      });
+    });
+
+    async function loadAccounts() {
+      if (loadingStarted) return;
+      loadingStarted = true;
+      
+      try {
+        const accountsList = document.getElementById('accountsList');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        token = sessionStorage.getItem('deriv_token');
+        console.log('Token from sessionStorage:', !!token);
+        
+        if (!token) {
+          errorMsg.style.display = 'block';
+          errorMsg.textContent = '❌ No authentication token found. Please log in again.';
+          accountsList.innerHTML = '';
+          setTimeout(() => window.location.href = '/', 2500);
+          return;
+        }
+
+        console.log('Authorizing with backend...');
+        const authResponse = await fetch('/.netlify/functions/authorize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token })
+        });
+        
+        const authData = await authResponse.json();
+        console.log('Auth response:', authData);
+        
+        if (!authData.success) {
+          throw new Error(authData.error || 'Failed to authorize');
+        }
+
+        if (authData.authorize) {
+          sessionStorage.setItem('deriv_user_id', authData.authorize.user_id);
+          
+          console.log('Fetching accounts from backend...');
+          const accountsResponse = await fetch('/.netlify/functions/accounts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token })
+          });
+          
+          const accountsData = await accountsResponse.json();
+          console.log('Accounts response:', accountsData);
+          
+          if (!accountsData.success) {
+            throw new Error(accountsData.error || 'Failed to fetch accounts');
+          }
+
+          if (accountsData.account_list && Array.isArray(accountsData.account_list)) {
+            accounts = accountsData.account_list;
+            
+            if (accounts.length === 0) {
+              errorMsg.style.display = 'block';
+              errorMsg.textContent = '⚠️ No trading accounts found. Please create an account on Deriv first.';
+              accountsList.innerHTML = '';
+              return;
+            }
+            
+            await fetchBalancesForAllAccounts(token, accounts);
+            displayAccounts(accounts);
+          } else {
+            throw new Error('No account list returned');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading accounts:', error);
+        const errorMsg = document.getElementById('errorMsg');
+        const accountsList = document.getElementById('accountsList');
+        errorMsg.style.display = 'block';
+        errorMsg.textContent = '❌ ' + error.message;
+        accountsList.innerHTML = '';
+      }
+    }
+
+    async function fetchBalancesForAllAccounts(token, accounts) {
+      console.log('Fetching balances for', accounts.length, 'accounts...');
+      for (const account of accounts) {
+        try {
+          const balanceResponse = await fetch('/.netlify/functions/balance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: token,
+              loginid: account.loginid
+            })
+          });
+          
+          const balanceData = await balanceResponse.json();
+          console.log('Balance for', account.loginid, ':', balanceData);
+          
+          if (balanceData.success && balanceData.balance) {
+            accountBalances[account.loginid] = {
+              amount: balanceData.balance.balance,
+              currency: balanceData.balance.currency
+            };
+          } else if (balanceData.error) {
+            console.warn('Error fetching balance for', account.loginid, ':', balanceData.error);
+            accountBalances[account.loginid] = {
+              amount: 0,
+              currency: account.currency || 'USD'
+            };
+          }
+        } catch (error) {
+          console.error('Error fetching balance for', account.loginid, ':', error);
+          accountBalances[account.loginid] = {
+            amount: 0,
+            currency: account.currency || 'USD'
+          };
+        }
+      }
+    }
+
+    function displayAccounts(accounts) {
+      const accountsList = document.getElementById('accountsList');
+      accountsList.innerHTML = '';
+      
+      let filteredAccounts = accounts;
+      if (currentFilter === 'demo') {
+        filteredAccounts = accounts.filter(a => a.account_type === 'demo');
+      } else if (currentFilter === 'live') {
+        filteredAccounts = accounts.filter(a => a.account_type !== 'demo');
+      }
+
+      if (filteredAccounts.length === 0) {
+        accountsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #bcdcff;">No accounts found for this filter.</div>';
+        return;
+      }
+
+      filteredAccounts.forEach((account) => {
+        const item = document.createElement('div');
+        item.className = 'account-item';
+        item.onclick = () => selectAccount(account, item);
+        
+        const type = account.account_type === 'demo' ? 'DEMO' : 'LIVE';
+        const badgeClass = account.account_type === 'demo' ? 'badge-demo' : 'badge-live';
+        const icon = account.account_type === 'demo' ? '🧪' : '💰';
+        const balance = accountBalances[account.loginid];
+        const balanceAmount = balance ? `${balance.currency} ${balance.amount.toFixed(2)}` : 'Loading...';
+        
+        item.innerHTML = `
+          <div style="display: flex; align-items: center; flex: 1;">
+            <div class="account-icon">${icon}</div>
+            <div class="account-info">
+              <div class="account-id">${account.loginid}</div>
+              <div class="account-type">
+                <span class="account-badge ${badgeClass}">${type}</span>
+                <span>${account.currency}</span>
+              </div>
+            </div>
+          </div>
+          <div class="account-balance">
+            <div class="balance-amount">${balanceAmount}</div>
+          </div>
+          <div class="arrow">→</div>
+        `;
+        accountsList.appendChild(item);
+      });
+    }
+
+    function selectAccount(account, element) {
+      document.querySelectorAll('.account-item').forEach(el => {
+        el.classList.remove('selected');
+      });
+      element.classList.add('selected');
+      selectedAccount = account;
+      document.getElementById('continueBtn').disabled = false;
+    }
+
+    async function continueToApp() {
+      if (!selectedAccount || !token) return;
+      const continueBtn = document.getElementById('continueBtn');
+      continueBtn.disabled = true;
+      continueBtn.innerHTML = '<div class="spinner"></div> Loading dashboard...';
+      
+      try {
+        const accountData = {
+          ...selectedAccount,
+          balance: accountBalances[selectedAccount.loginid]
+        };
+        sessionStorage.setItem('selected_account', JSON.stringify(accountData));
+        sessionStorage.setItem('deriv_token', token);
+        console.log('Saved to sessionStorage:', accountData);
+        console.log('Token saved:', !!token);
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.location.href = '/app/?account=' + selectedAccount.loginid;
+      } catch (error) {
+        console.error('Error:', error);
+        continueBtn.disabled = false;
+        continueBtn.textContent = 'Continue';
+      }
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = '/';
+    }
+
+    document.getElementById('continueBtn').onclick = continueToApp;
+    window.addEventListener('load', loadAccounts);
+  </script>
+</body>
+</html>
