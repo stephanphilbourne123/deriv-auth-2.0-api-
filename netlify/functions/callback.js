@@ -1,10 +1,9 @@
 /**
  * Deriv OAuth 2.0 Callback Handler
- * This function processes the OAuth redirect from Deriv and exchanges code for token
+ * This function processes the OAuth redirect from Deriv and exchanges code for PAT token
  */
 
 const https = require('https');
-const { URL } = require('url');
 
 function exchangeCodeForToken(code, clientId, clientSecret, redirectUri) {
   return new Promise((resolve, reject) => {
@@ -23,29 +22,40 @@ function exchangeCodeForToken(code, clientId, clientSecret, redirectUri) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
+        'Content-Length': Buffer.byteLength(payload),
+        'User-Agent': 'NodeJS-Client'
       }
     };
 
-    console.log('Exchanging code for token at:', options.hostname + options.path);
+    console.log('=== TOKEN EXCHANGE START ===');
+    console.log('Exchanging code for token');
+    console.log('Hostname:', options.hostname);
+    console.log('Path:', options.path);
+    console.log('Code length:', code.length);
 
     const req = https.request(options, (res) => {
       console.log('Token exchange response status:', res.statusCode);
+      console.log('Response headers:', JSON.stringify(res.headers));
+      
       let data = '';
 
       res.on('data', (chunk) => {
+        console.log('Received chunk:', chunk.length, 'bytes');
         data += chunk;
       });
 
       res.on('end', () => {
-        console.log('Token exchange response length:', data.length);
+        console.log('Total response data:', data.length, 'bytes');
+        console.log('First 300 chars:', data.substring(0, 300));
+        
         try {
           const parsed = JSON.parse(data);
-          console.log('Token exchange successful');
+          console.log('Successfully parsed JSON');
+          console.log('Response keys:', Object.keys(parsed));
           resolve(parsed);
         } catch (e) {
           console.error('JSON parse error:', e.message);
-          reject(new Error(`Invalid JSON: ${data.substring(0, 100)}`));
+          reject(new Error(`Invalid JSON: ${data.substring(0, 200)}`));
         }
       });
     });
@@ -55,6 +65,13 @@ function exchangeCodeForToken(code, clientId, clientSecret, redirectUri) {
       reject(error);
     });
 
+    req.on('timeout', () => {
+      console.error('Request timeout');
+      req.destroy();
+      reject(new Error('Token exchange timeout'));
+    });
+
+    console.log('Writing payload...');
     req.write(payload);
     req.end();
   });
@@ -63,6 +80,7 @@ function exchangeCodeForToken(code, clientId, clientSecret, redirectUri) {
 exports.handler = async (event, context) => {
   console.log('=== CALLBACK FUNCTION START ===');
   console.log('Method:', event.httpMethod);
+  console.log('Path:', event.path);
   console.log('Query params:', event.queryStringParameters);
 
   if (event.httpMethod !== 'GET') {
@@ -102,33 +120,37 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    console.log('Received code:', code.substring(0, 10) + '...');
+    console.log('Received code:', code.substring(0, 15) + '...');
 
     const clientId = process.env.DERIV_CLIENT_ID;
     const clientSecret = process.env.DERIV_CLIENT_SECRET;
     const redirectUri = process.env.DERIV_REDIRECT_URI || 'https://mickeysmartaibot.netlify.app/.netlify/functions/callback';
 
-    console.log('Client ID:', !!clientId ? 'present' : 'MISSING');
-    console.log('Client Secret:', !!clientSecret ? 'present' : 'MISSING');
+    console.log('Environment check:');
+    console.log('- Client ID present:', !!clientId);
+    console.log('- Client Secret present:', !!clientSecret);
+    console.log('- Redirect URI:', redirectUri);
 
     if (!clientId || !clientSecret) {
-      console.error('Missing Deriv credentials');
+      console.error('Missing Deriv OAuth credentials');
       return {
         statusCode: 500,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           success: false,
           error: 'server_error',
-          message: 'Server configuration error'
+          message: 'Missing Deriv OAuth credentials in environment'
         })
       };
     }
 
-    console.log('Exchanging authorization code for access token...');
+    console.log('Starting token exchange...');
     const tokenResponse = await exchangeCodeForToken(code, clientId, clientSecret, redirectUri);
 
+    console.log('Token response received');
+    
     if (tokenResponse.error) {
-      console.error('Token exchange error:', tokenResponse.error);
+      console.error('Deriv error in response:', tokenResponse.error);
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -140,11 +162,15 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Token exchange successful!');
-    console.log('Access token received:', tokenResponse.access_token ? tokenResponse.access_token.substring(0, 20) + '...' : 'MISSING');
+    console.log('Token exchange SUCCESS!');
+    console.log('Access token:', tokenResponse.access_token ? tokenResponse.access_token.substring(0, 20) + '...' : 'MISSING');
+    console.log('Token type:', tokenResponse.token_type);
+    console.log('Expires in:', tokenResponse.expires_in);
 
-    // Redirect to app with token
-    const appUrl = `https://mickeysmartaibot.netlify.app/app/selector.html?token=${encodeURIComponent(tokenResponse.access_token)}&expires_in=${tokenResponse.expires_in || 86400}`;
+    // Redirect to app with access token (PAT)
+    const appUrl = `https://mickeysmartaibot.netlify.app/app/selector.html?token=${encodeURIComponent(tokenResponse.access_token)}&token_type=${tokenResponse.token_type || 'Bearer'}&expires_in=${tokenResponse.expires_in || 86400}`;
+
+    console.log('Redirecting to:', appUrl.substring(0, 100) + '...');
 
     return {
       statusCode: 302,
@@ -152,11 +178,11 @@ exports.handler = async (event, context) => {
         'Location': appUrl,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ success: true, message: 'Redirecting with token' })
+      body: JSON.stringify({ success: true, message: 'Redirecting with access token' })
     };
   } catch (error) {
     console.error('[Callback Error]', error.message);
-    console.error('Stack:', error.stack);
+    console.error('Error stack:', error.stack);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
