@@ -104,8 +104,8 @@
     </div>
     <div class="error" id="error"></div>
     <div class="success" id="success"></div>
-    <button class="button" id="continueBtn" onclick="window.location.href = '/app/'">
-      Continue to Dashboard →
+    <button class="button" id="continueBtn" onclick="window.location.href = '/app/selector.html'">
+      Continue to Account Selector →
     </button>
   </div>
 
@@ -143,15 +143,19 @@
           throw new Error(result.message || 'Failed to process authorization');
         }
 
-        // Success!
+        // Success! Token should now be in sessionStorage
+        console.log('✅ Token exchange successful');
+        const token = sessionStorage.getItem('deriv_token');
+        console.log('Token in storage:', !!token);
+
         statusEl.style.display = 'none';
-        successEl.textContent = '✓ Authorization successful! Redirecting to dashboard...';
+        successEl.textContent = '✓ Authorization successful! Redirecting to account selector...';
         successEl.classList.add('show');
         continueBtn.classList.add('show');
 
-        // Auto-redirect after 2 seconds
+        // Auto-redirect after 2 seconds to account selector
         setTimeout(() => {
-          window.location.href = '/app/';
+          window.location.href = '/app/selector.html';
         }, 2000);
 
       } catch (err) {
@@ -159,7 +163,7 @@
         statusEl.style.display = 'none';
         errorEl.textContent = '✗ ' + err.message;
         errorEl.classList.add('show');
-        continueBtn.textContent = '← Go Back';
+        continueBtn.textContent = '← Go Back to Login';
         continueBtn.onclick = () => window.location.href = '/';
         continueBtn.classList.add('show');
       }
