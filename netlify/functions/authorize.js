@@ -61,7 +61,6 @@ function makeDerivRequest(payload, token) {
 exports.handler = async (event, context) => {
   console.log('=== AUTHORIZE FUNCTION START ===');
   console.log('Method:', event.httpMethod);
-  console.log('Event body:', event.body);
 
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -69,7 +68,7 @@ exports.handler = async (event, context) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ success: true })
@@ -85,11 +84,22 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const token = body.token;
+    // Get token from Authorization header
+    const authHeader = event.headers['Authorization'] || event.headers['authorization'];
+    console.log('🔑 Auth header received:', !!authHeader);
     
-    console.log('🔑 Token received:', !!token);
-    console.log('📏 Token length:', token ? token.length : 0);
+    if (!authHeader) {
+      console.error('❌ No Authorization header');
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: 'Authorization header is required' })
+      };
+    }
+
+    // Extract token from "Bearer TOKEN"
+    const token = authHeader.replace('Bearer ', '').trim();
+    console.log('🔑 Token extracted, length:', token.length);
     
     if (!token) {
       return {
@@ -101,10 +111,10 @@ exports.handler = async (event, context) => {
 
     console.log('🚀 Making authorize request to Deriv...');
     const authResponse = await makeDerivRequest({ authorize: 1 }, token);
-    console.log('✅ Auth response received:', JSON.stringify(authResponse).substring(0, 200));
+    console.log('✅ Auth response received');
 
     if (authResponse.error) {
-      console.error('❌ Deriv API Error:', authResponse.error);
+      console.error('❌ Deriv API Error:', authResponse.error.message);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -112,7 +122,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('✅ Authorization successful!');
+    console.log('✅ Authorization successful! User ID:', authResponse.authorize?.user_id);
     return {
       statusCode: 200,
       headers: {
