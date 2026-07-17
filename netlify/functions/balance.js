@@ -55,7 +55,6 @@ function makeDerivRequest(payload, token) {
 
 exports.handler = async (event, context) => {
   console.log('=== BALANCE FUNCTION START ===');
-  console.log('Event body:', event.body);
 
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -63,7 +62,7 @@ exports.handler = async (event, context) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ success: true })
@@ -79,19 +78,33 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const token = body.token;
-    const loginid = body.loginid;
+    // Get token from Authorization header
+    const authHeader = event.headers['Authorization'] || event.headers['authorization'];
+    console.log('🔑 Auth header received:', !!authHeader);
     
-    console.log('🔑 Token received:', !!token);
-    console.log('📏 Token length:', token ? token.length : 0);
+    if (!authHeader) {
+      console.error('❌ No Authorization header');
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: 'Authorization header is required' })
+      };
+    }
+
+    // Extract token from "Bearer TOKEN"
+    const token = authHeader.replace('Bearer ', '').trim();
+    console.log('🔑 Token extracted, length:', token.length);
+    
+    // Get loginid from body
+    const body = JSON.parse(event.body || '{}');
+    const loginid = body.loginid;
     console.log('👤 LoginID:', loginid);
     
     if (!token || !loginid) {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: false, error: 'Token and loginid are required' })
+        body: JSON.stringify({ success: false, error: 'Authorization header and loginid are required' })
       };
     }
 
@@ -104,7 +117,7 @@ exports.handler = async (event, context) => {
     console.log('✅ Balance response received');
 
     if (balanceResponse.error) {
-      console.error('❌ Deriv API Error:', balanceResponse.error);
+      console.error('❌ Deriv API Error:', balanceResponse.error.message);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
