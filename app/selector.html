@@ -245,9 +245,9 @@
         const authResponse = await fetch('/.netlify/functions/authorize', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ token: token })
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
         });
         
         const authData = await authResponse.json();
@@ -265,9 +265,9 @@
           const accountsResponse = await fetch('/.netlify/functions/accounts', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ token: token })
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
           });
           
           const accountsData = await accountsResponse.json();
@@ -311,10 +311,10 @@
           const balanceResponse = await fetch('/.netlify/functions/balance', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-              token: token,
               loginid: account.loginid
             })
           });
