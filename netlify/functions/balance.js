@@ -1,6 +1,6 @@
 const https = require('https');
 
-function makeDerivRequest(payload) {
+function makeDerivRequest(payload, token) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify(payload);
     
@@ -11,9 +11,9 @@ function makeDerivRequest(payload) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData)
-      },
-      timeout: 10000
+        'Content-Length': Buffer.byteLength(postData),
+        'Authorization': `Bearer ${token}`
+      }
     };
 
     const req = https.request(options, (res) => {
@@ -42,9 +42,7 @@ function makeDerivRequest(payload) {
 
 exports.handler = async (event, context) => {
   console.log('balance function called');
-  console.log('Method:', event.httpMethod);
 
-  // Handle OPTIONS requests for CORS
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -70,8 +68,6 @@ exports.handler = async (event, context) => {
     const body = JSON.parse(event.body || '{}');
     const { token, loginid } = body;
     
-    console.log('Token received:', !!token, 'LoginID:', loginid);
-    
     if (!token || !loginid) {
       return {
         statusCode: 400,
@@ -80,13 +76,10 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Fetching balance for', loginid);
     const balanceResponse = await makeDerivRequest({
-      authorize: token,
       balance: 1,
       loginid: loginid
-    });
-    console.log('Balance response received');
+    }, token);
 
     if (balanceResponse.error) {
       return {

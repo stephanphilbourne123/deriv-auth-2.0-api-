@@ -1,30 +1,25 @@
 const https = require('https');
-const http = require('http');
-const { URL } = require('url');
 
-function makeDerivRequest(payload) {
+function makeDerivRequest(payload, token) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify(payload);
     
-    const url = new URL('https://api.deriv.com/api/v3');
-    
     const options = {
-      hostname: url.hostname,
+      hostname: 'api.deriv.com',
       port: 443,
-      path: url.pathname,
+      path: '/api/v3',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData),
-        'User-Agent': 'NodeJS-Client'
+        'Authorization': `Bearer ${token}`
       }
     };
 
-    console.log('Making HTTPS request to:', url.href);
+    console.log('Making request to Deriv API with bearer token');
     
     const req = https.request(options, (res) => {
       console.log('Response status:', res.statusCode);
-      console.log('Response headers:', res.headers);
       
       let data = '';
       
@@ -33,32 +28,21 @@ function makeDerivRequest(payload) {
       });
       
       res.on('end', () => {
-        console.log('Response data length:', data.length);
-        console.log('First 200 chars:', data.substring(0, 200));
-        
         try {
           const parsed = JSON.parse(data);
-          console.log('Successfully parsed JSON');
           resolve(parsed);
         } catch (e) {
-          console.error('JSON parse error:', e.message);
           reject(new Error(`Invalid JSON from Deriv: ${data.substring(0, 200)}`));
         }
       });
     });
 
-    req.on('error', (error) => {
-      console.error('Request error:', error.message);
-      reject(error);
-    });
-    
+    req.on('error', reject);
     req.on('timeout', () => {
-      console.error('Request timeout');
       req.destroy();
       reject(new Error('Deriv API timeout'));
     });
     
-    console.log('Writing payload:', JSON.stringify(payload).substring(0, 100) + '...');
     req.write(postData);
     req.end();
   });
@@ -67,11 +51,8 @@ function makeDerivRequest(payload) {
 exports.handler = async (event, context) => {
   console.log('=== AUTHORIZE FUNCTION START ===');
   console.log('Method:', event.httpMethod);
-  console.log('Path:', event.path);
 
-  // Handle OPTIONS requests for CORS
   if (event.httpMethod === 'OPTIONS') {
-    console.log('Handling OPTIONS request');
     return {
       statusCode: 200,
       headers: {
@@ -93,15 +74,12 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    console.log('Parsing request body...');
     const body = JSON.parse(event.body || '{}');
     const { token } = body;
     
     console.log('Token received:', !!token);
-    console.log('Token length:', token ? token.length : 0);
     
     if (!token) {
-      console.error('No token provided');
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -109,12 +87,11 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Making request to Deriv with token...');
-    const authResponse = await makeDerivRequest({ authorize: token });
-    console.log('Auth response received successfully');
+    console.log('Making request to Deriv...');
+    const authResponse = await makeDerivRequest({ authorize: 1 }, token);
+    console.log('Auth response received');
 
     if (authResponse.error) {
-      console.error('Deriv error:', authResponse.error);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -122,7 +99,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('Authorization successful');
     return {
       statusCode: 200,
       headers: {
@@ -136,7 +112,6 @@ exports.handler = async (event, context) => {
     };
   } catch (error) {
     console.error('Authorization error:', error.message);
-    console.error('Stack:', error.stack);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
