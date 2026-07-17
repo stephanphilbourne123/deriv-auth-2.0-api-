@@ -1,5 +1,3 @@
-const https = require('https');
-
 exports.handler = async (event, context) => {
   console.log('=== AUTHORIZE FUNCTION START ===');
   console.log('Method:', event.httpMethod);
@@ -51,17 +49,15 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('🚀 Making authorize request to Deriv API...');
+    console.log('🚀 Making GET request to Deriv API...');
     
-    const derivResponse = await fetch('https://api.deriv.com/api/v3', {
-      method: 'POST',
+    const derivResponse = await fetch('https://api.derivws.com/trading/v1/options/accounts', {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
         'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ authorize: 1 }),
       redirect: 'manual'
     });
 
@@ -69,6 +65,21 @@ exports.handler = async (event, context) => {
     
     const responseText = await derivResponse.text();
     console.log('📄 Response text length:', responseText.length);
+
+    // Check for redirects
+    if (derivResponse.status >= 300 && derivResponse.status < 400) {
+      console.error('❌ Deriv returned redirect');
+      return {
+        statusCode: 502,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Deriv endpoint redirected',
+          derivStatus: derivResponse.status,
+          derivLocation: derivResponse.headers.get('location')
+        })
+      };
+    }
 
     if (!derivResponse.ok) {
       console.error('❌ Deriv API returned non-ok status');
@@ -79,7 +90,6 @@ exports.handler = async (event, context) => {
           success: false,
           error: 'Deriv authorize request failed',
           derivStatus: derivResponse.status,
-          derivLocation: derivResponse.headers.get('location'),
           derivResponse: responseText.slice(0, 500)
         })
       };
@@ -98,22 +108,21 @@ exports.handler = async (event, context) => {
           success: false,
           error: 'Deriv returned a non-JSON response',
           derivStatus: derivResponse.status,
-          derivLocation: derivResponse.headers.get('location'),
           derivResponse: responseText.slice(0, 500)
         })
       };
     }
 
     if (derivData.error) {
-      console.error('❌ Deriv API Error:', derivData.error.message);
+      console.error('❌ Deriv API Error:', derivData.error.message || derivData.error);
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: false, error: derivData.error.message })
+        body: JSON.stringify({ success: false, error: derivData.error.message || derivData.error })
       };
     }
 
-    console.log('✅ Authorization successful! User ID:', derivData.authorize?.user_id);
+    console.log('✅ Authorization successful!');
     return {
       statusCode: 200,
       headers: {
@@ -122,7 +131,7 @@ exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         success: true,
-        authorize: derivData.authorize
+        authorize: derivData
       })
     };
   } catch (error) {
