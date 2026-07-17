@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deriv OAuth 2.0 Login</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: Inter, system-ui, Segoe UI, Roboto, sans-serif;
+      color: #ffffff;
+      background: linear-gradient(135deg, #00c6ff, #0072ff, #6a11cb);
+      background-size: 260% 260%;
+      animation: bgShift 18s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    @keyframes bgShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .login-container {
+      width: min(500px, 100%);
+      background: rgba(15, 28, 63, 0.95);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 50px 30px;
+      text-align: center;
+      box-shadow: 0 22px 55px rgba(0, 0, 0, 0.8);
+    }
+    .login-icon { font-size: 48px; margin-bottom: 20px; }
+    .login-title { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+    .login-sub { font-size: 14px; color: #bcdcff; margin-bottom: 40px; }
+    .oauth-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: linear-gradient(90deg, #00e0ff, #3a7bff);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+    .oauth-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 224, 255, 0.4);
+    }
+    .oauth-btn:active { transform: translateY(0); }
+    .oauth-icon { font-size: 20px; }
+    .error {
+      background: rgba(255, 77, 109, 0.1);
+      border: 1px solid rgba(255, 77, 109, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      color: #ff6b9d;
+      margin-bottom: 20px;
+      font-size: 13px;
+      display: none;
+    }
+    .loading {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 198, 255, 0.2);
+      border-top-color: #00c6ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .info-text {
+      font-size: 12px;
+      color: #8ab4e8;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-icon">🚀</div>
+    <div class="login-title">Login with Deriv</div>
+    <div class="login-sub">Connect your Deriv account to start trading</div>
+    
+    <div id="errorMsg" class="error"></div>
+    
+    <button id="derivLoginBtn" class="oauth-btn">
+      <span class="oauth-icon">📊</span>
+      <span>Sign In with Deriv</span>
+    </button>
+    
+    <div class="info-text">
+      ℹ️ You'll be redirected to Deriv to securely authorize access
+    </div>
+  </div>
+
+  <script>
+    // Get the OAuth credentials from environment or use defaults
+    const DERIV_CLIENT_ID = 'YOUR_DERIV_CLIENT_ID'; // Will be replaced by Netlify env vars
+    const DERIV_OAUTH_URL = 'https://oauth.deriv.com/oauth2/authorize';
+    const REDIRECT_URI = window.location.origin + '/.netlify/functions/callback';
+    const SCOPE = 'read write';
+
+    function getClientId() {
+      // Try to get from window if injected
+      if (window.DERIV_CLIENT_ID) return window.DERIV_CLIENT_ID;
+      return DERIV_CLIENT_ID;
+    }
+
+    function startOAuthFlow() {
+      const clientId = getClientId();
+      
+      if (!clientId || clientId === 'YOUR_DERIV_CLIENT_ID') {
+        showError('❌ Deriv Client ID not configured. Contact administrator.');
+        return;
+      }
+
+      console.log('Starting OAuth flow...');
+      console.log('Client ID:', clientId);
+      console.log('Redirect URI:', REDIRECT_URI);
+
+      // Generate state for CSRF protection
+      const state = Math.random().toString(36).substring(7);
+      sessionStorage.setItem('oauth_state', state);
+
+      // Build OAuth URL
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: REDIRECT_URI,
+        response_type: 'code',
+        scope: SCOPE,
+        state: state
+      });
+
+      const authUrl = `${DERIV_OAUTH_URL}?${params.toString()}`;
+      console.log('Redirecting to:', authUrl);
+      
+      // Redirect to Deriv OAuth
+      window.location.href = authUrl;
+    }
+
+    function showError(message) {
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = message;
+      errorMsg.style.display = 'block';
+    }
+
+    // Check if we're returning from OAuth callback with token in URL
+    function checkForToken() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const tokenType = params.get('token_type') || 'Bearer';
+      const expiresIn = params.get('expires_in');
+
+      if (token) {
+        console.log('✅ Token received from callback!');
+        
+        // Save token to sessionStorage
+        sessionStorage.setItem('deriv_token', token);
+        sessionStorage.setItem('deriv_token_type', tokenType);
+        if (expiresIn) sessionStorage.setItem('deriv_token_expires', expiresIn);
+        
+        console.log('Token saved to sessionStorage');
+        
+        // Redirect to account selector
+        setTimeout(() => {
+          window.location.href = '/app/selector.html';
+        }, 500);
+      }
+    }
+
+    // Event listeners
+    document.getElementById('derivLoginBtn').addEventListener('click', startOAuthFlow);
+
+    // Check on page load
+    window.addEventListener('load', checkForToken);
+  </script>
+</body>
+</html>
