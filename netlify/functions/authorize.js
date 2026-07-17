@@ -12,11 +12,17 @@ function makeDerivRequest(payload, token) {
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(postData),
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90'
       }
     };
 
     console.log('Making request to Deriv API with bearer token');
+    console.log('Headers:', {
+      'Authorization': 'Bearer [token]',
+      'Deriv-App-ID': options.headers['Deriv-App-ID'],
+      'Content-Type': 'application/json'
+    });
     
     const req = https.request(options, (res) => {
       console.log('Response status:', res.statusCode);
