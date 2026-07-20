@@ -1,0 +1,131 @@
+ont-weight:900;
+  background:#12040a;
+  position:relative;
+}
+.par-stream-cell.even{
+  box-shadow:0 0 10px rgba(34,197,94,0.25);
+  border-color:rgba(34,197,94,0.35);
+}
+.par-stream-cell.odd{
+  box-shadow:0 0 10px rgba(249,115,22,0.18);
+  border-color:rgba(249,115,22,0.35);
+}
+.par-stream-cell.last{
+  outline:2px solid rgba(59,130,246,0.9);
+}
+.par-stream-cell .emo{
+  position:absolute;
+  top:4px;
+  right:6px;
+  font-size:13px;
+  line-height:1;
+}
+
+/* Parity live glow (EVEN green, ODD orange) */
+.parity-live{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top:10px;
+}
+.parity-pill{
+  flex:1;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(250,250,250,0.12);
+  background:rgba(24,6,15,0.95);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-weight:700;
+}
+.parity-pill.even.active{
+  box-shadow:0 0 14px rgba(34,197,94,0.95);
+  border-color:rgba(34,197,94,1);
+}
+.parity-pill.odd.active{
+  box-shadow:0 0 14px rgba(249,115,22,0.95);
+  border-color:rgba(249,115,22,1);
+}
+.parity-pill small{font-weight:600;color:var(--muted)}
+
+.history{
+  display:grid;
+  gap:10px;
+  max-height:60vh;
+  overflow:auto;
+}
+.log{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+  background:#1b0711;
+  border:1px solid var(--border);
+  border-radius:10px;
+}
+.status.win{color:var(--good);font-weight:800}
+.status.lose{color:var(--bad);font-weight:800}
+.muted{color:var(--muted)}
+.right{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+}
+.small{font-size:11px}
+
+/* NEW: status pill for Ultimate X panel */
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:11px;
+}
+.status-pill-dot{
+  width:7px;
+  height:7px;
+  border-radius:999px;
+}
+.status-pill.running{
+  background:rgba(34,197,94,0.12);
+  color:var(--good);
+}
+.status-pill.running .status-pill-dot{
+  background:var(--good);
+  box-shadow:0 0 10px rgba(34,197,94,0.9);
+}
+.status-pill.stopped{
+  background:rgba(248,113,113,0.12);
+  color:var(--bad);
+}
+.status-pill.stopped .status-pill-dot{
+  background:var(--bad);
+}
+
+/* === Ultimate X extra UI (progress bar + BEST toggle) === */
+.ux-target-wrapper{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.ux-target-bar{
+  width:12px;
+  height:90px;
+  border-radius:999px;
+  border:1px solid rgba(250,250,250,0.18);
+  background:rgba(15,23,42,0.65);
+  overflow:hidden;
+}
+.ux-target-fill{
+  width:100%;
+  height:0%;
+  border-radius:inherit;
+  background:linear-gradient(180deg,#22c55e,#4ade80);
+  transition:height .25s ease-out;
+}
+
+/* Orange glow w

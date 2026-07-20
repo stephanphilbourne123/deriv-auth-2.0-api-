@@ -1,0 +1,63 @@
+</strong> indices to focus on (normal R pairs only, not the 1s versions).
+        </p>
+
+        <div class="time-helper-grid">
+          <button class="time-helper-btn"
+            data-msg="10AM – 4PM (your time): Focus on R 25, R 50, R 100. Use the normal R indices, NOT the 1s versions.">
+            10AM – 4PM
+          </button>
+
+          <button class="time-helper-btn"
+            data-msg="8PM – 11PM (your time): Focus on R 10, R 50, R 75. Use the normal R indices, NOT the 1s versions.">
+            8PM – 11PM
+          </button>
+
+          <button class="time-helper-btn bad-time"
+            data-msg="12AM – 3AM: Market is usually very spiky and unstable. Avoid trading here, even on the R pairs.">
+            12AM – 3AM (Avoid)
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Select Index</label>
+            <select id="mx-index">
+              <option value="R_10">R 10</option>
+              <option value="R_25">R 25</option>
+              <option value="R_50">R 50</option>
+              <option value="R_75">R 75</option>
+              <option value="R_100" selected>R 100</option>
+            </select>
+          </div>
+          <div>
+            <label>Duration (ticks)</label>
+            <select id="mx-duration">
+              <option>1</option>
+              <option selected>2</option>
+              <option>3</option>
+            </select>
+          </div>
+          <div>
+            <label>Stake (USD)</label>
+            <input id="mx-stake" type="number" value="1" min="0.35" step="0.01"/>
+            <div style="margin-top:10px">
+              <small class="muted">Multiplier</small>
+              <div class="mult-btns" style="margin-top:6px">
+                <button class="mult-btn" id="mx-mult-off">OFF</button>
+                <button class="mult-btn" id="mx-mult-x2">x2</button>
+                <button class="mult-btn" id="mx-mult-x3">x3</button>
+              </div>
+              <div class="small muted" style="margin-top:6px">
+                Effective stake: <strong id="mx-eff-stake">$1.00</strong>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label>Mickey X Controls</label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn good" id="mx-place">Place Mickey X Trade</button>
+              <label style="font-size:12px;display:flex;align-items:center;gap:6px">
+                <input type="checkbox" id="mx-auto-toggle" style="width:auto;height:auto" />
+                Auto Trade (≥90% confide

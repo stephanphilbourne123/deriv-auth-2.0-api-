@@ -1,0 +1,2 @@
+url key https://srjjgmofqynoctctkmxr.supabase.co   
+ key sb_publishable_a-8jkfGOx4UO4Svhk8v4JQ_M3qZxW7E            

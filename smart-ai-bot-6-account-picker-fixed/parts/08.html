@@ -1,0 +1,63 @@
+ 20 ticks to estimate EVEN vs ODD probability and chooses the higher.</small>
+      </div>
+      <div class="card" id="par-analyzer-card" style="display:none">
+        <h3 style="margin:0 0 8px">Parity Analyzer (Last 20)</h3>
+        <small class="muted" id="par-analyzer-meta">Waiting…</small>
+
+        <div style="margin-top:10px;display:grid;gap:8px">
+          <div class="pill">Even%: <strong id="par-an-evenPct">0%</strong> • Odd%: <strong id="par-an-oddPct">0%</strong></div>
+          <div class="pill">P(3rd EVEN | 2 EVEN): <strong id="par-an-p3even">0%</strong></div>
+          <div class="pill">P(3rd ODD | 2 ODD): <strong id="par-an-p3odd">0%</strong></div>
+          <div class="pill">Live 3-Streak Alert: <strong id="par-an-liveAlert">—</strong></div>
+        </div>
+      </div>
+
+      <!-- Best Time & Pair Suggestions -->
+      <div class="time-helper-card">
+        <h3 class="time-helper-title">Best Time & Pair Suggestions</h3>
+        <p class="time-helper-note">
+          Tap a time window to see which <strong>R</strong> indices to focus on (normal R pairs only, not the 1s versions).
+        </p>
+
+        <div class="time-helper-grid">
+          <button class="time-helper-btn"
+            data-msg="10AM – 4PM (your time): Focus on R 25, R 50, R 100. Use the normal R indices, NOT the 1s versions.">
+            10AM – 4PM
+          </button>
+
+          <button class="time-helper-btn"
+            data-msg="8PM – 11PM (your time): Focus on R 10, R 50, R 75. Use the normal R indices, NOT the 1s versions.">
+            8PM – 11PM
+          </button>
+
+          <button class="time-helper-btn bad-time"
+            data-msg="12AM – 3AM: Market is usually very spiky and unstable. Avoid trading here, even on the R pairs.">
+            12AM – 3AM (Avoid)
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Select Index</label>
+            <select id="par-index">
+              <option value="R_10">R 10</option>
+              <option value="R_25">R 25</option>
+              <option value="R_50">R 50</option>
+              <option value="R_75">R 75</option>
+              <option value="R_100" selected>R 100</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Trade Type</label>
+            <select id="par-type">
+              <option value="AUTO" selected>AUTO SIGNAL (≥70%)</option>
+              <option value="EVEN">EVEN</option>
+              <option value="ODD">ODD</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Duration (ticks)</label>

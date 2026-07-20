@@ -1,0 +1,9 @@
+# Add these in Netlify > Site configuration > Environment variables
+
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+SESSION_SECRET=
+TOKEN_ENCRYPTION_KEY=
+DERIV_APP_ID=
+DERIV_CLIENT_ID=
+DERIV_REDIRECT_URI=

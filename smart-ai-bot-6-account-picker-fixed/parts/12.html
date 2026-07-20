@@ -1,0 +1,68 @@
+nce, every 30 seconds)
+              </label>
+              <small class="muted" id="mx-last-signal-label">Waiting for signal…</small>
+              <small class="muted" id="mx-manual-label" style="display:none">Manual: —</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mickey X widget -->
+      <section class="mx-panel">
+        <div class="mx-panel-header">
+          <div class="mx-panel-group">
+            <div class="mx-mini-card">
+              <div class="mx-mini-label">Analysis Tick Count</div>
+              <div class="mx-mini-value" id="mx-analysis-count">20</div>
+            </div>
+            <div class="mx-mini-card">
+              <div class="mx-mini-label">Best Threshold</div>
+              <div class="mx-mini-value" id="mx-threshold-display">0</div>
+            </div>
+          </div>
+
+          <div class="mx-panel-group mx-panel-group-right">
+            <button class="mx-toggle" id="mx-intelligent-barrier-toggle">
+              <span class="mx-toggle-dot"></span>
+              Enable Intelligent Barrier
+            </button>
+          </div>
+        </div>
+
+        <div class="mx-panel-row">
+          <div class="mx-stat-card">
+            <div class="mx-stat-label">Current Price</div>
+            <div class="mx-stat-value" id="mx-current-price">0.00000</div>
+          </div>
+          <div class="mx-stat-card">
+            <div class="mx-stat-label">Price Change</div>
+            <div class="mx-stat-value mx-stat-value-negative" id="mx-price-change">0.00000</div>
+          </div>
+          <div class="mx-stat-card">
+            <div class="mx-stat-label">Ticks Analyzed</div>
+            <div class="mx-stat-value" id="mx-ticks-analyzed">0</div>
+          </div>
+        </div>
+
+        <div class="mx-panel-row mx-panel-row-2col">
+          <div class="mx-card">
+            <div class="mx-card-title">
+              Digit Threshold Analysis (Threshold: <span id="mx-threshold-label">0</span>)
+            </div>
+
+            <div class="mx-bar-block">
+              <div class="mx-bar-header">
+                <span>Above <span id="mx-above-label">0</span></span>
+                <span id="mx-above-percent">0.0%</span>
+              </div>
+              <div class="mx-bar-track">
+                <div class="mx-bar-fill mx-bar-fill-above" id="mx-above-bar"></div>
+              </div>
+              <div class="mx-bar-subtext">
+                <span id="mx-above-count">0 digits</span>
+              </div>
+            </div>
+
+            <div class="mx-bar-block">
+              <div class="mx-bar-header">
+                <span>Below <span 

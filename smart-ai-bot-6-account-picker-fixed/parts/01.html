@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mickey Smart AI — Dual Tabs (Parity & M-Digit)</title>
+<link rel="icon" href="favicon.png">
+<style>
+:root{
+  /* Christmas palette – matches login page vibe */
+  --bg-1:#1a0306;
+  --bg-2:#3b0614;
+  --card:#240711;
+  --card-2:#300919;
+  --text:#fff7f5;
+  --muted:#ffd7c7;
+  --accent:#4ade80;   /* Christmas green */
+  --good:#22c55e;
+  --bad:#fb7185;
+  --border:#5b1223;
+  --odd:#f97316;      /* orange for odd glow */
+}
+
+/* ===== Base layout ===== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+
+  /* Christmas gradient + glow similar to login page */
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255,255,255,0.18), transparent 55%),
+    radial-gradient(circle at 85% 80%, rgba(255,255,255,0.14), transparent 55%),
+    radial-gradient(circle at 80% 10%, rgba(248,113,113,0.4), transparent 60%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  position:relative;
+
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+.app{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  min-height:100vh;
+}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  background:linear-gradient(180deg, rgba(18,4,12,0.96), rgba(27,4,16,0.98));
+  border-right:1px solid var(--border);
+  padding:20px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow:auto;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+}
+.brand .dot{
+  width:10px;height:10px;
+  border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 18px var(--accent);
+}
+.brand h1{
+  font-size:16px;
+  margin:0;
+  font-weight:700;
+  letter-spacing:.3px;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:12px;
+}
+.nav button{
+  text-align:left;
+  padding:12px 14px;
+  border-radius:10px;
+  background:rgba(24,6,15,0.9);
+  border:1px solid rgba(250,250,250,0.05);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:600;
+}
+.nav button.active{
+  outline:2px solid var(--accent);
+  background:linear-gradient(180deg, rgba(36,7,17,0.95), rgba(45,9,22,0.95));
+}
+
+/* ===== Main panels & cards ===== */
+main{padding:24px}
+.panel{display:none}
+.panel.active{display:block;animation:fade .18s ease-in}
+@keyframes fade{
+  from{opacity:0;transform:translateY(4px)}
+  to{opacity:1;transform:none}
+}
+
+.card{
+  background:linear-gradient(180deg,var(--card),var(--card-2));
+  border:1px solid rgba(250,250,250,0.08);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:18px;

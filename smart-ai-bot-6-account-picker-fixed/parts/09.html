@@ -1,0 +1,68 @@
+            <select id="par-duration">
+              <option>1</option>
+              <option selected>2</option>
+              <option>3</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Stake (USD)</label>
+            <input id="par-stake" type="number" value="1" min="0.35" step="0.01"/>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:8px">
+          <div>
+            <label>Digits View (read-only)</label>
+            <div class="grid10" id="par-digits"></div>
+
+            <!-- NEW: Digit Stream (last 20 digits) -->
+            <div class="par-stream">
+              <div class="par-stream-title">
+                <span>Live Digit Stream (Last 20)</span>
+                <span class="muted small">drives parity</span>
+              </div>
+              <div class="par-stream-grid" id="par-digit-stream"></div>
+            </div>
+
+            <!-- live even/odd view + glow -->
+            <div class="parity-live">
+              <div class="parity-pill even" id="par-live-even">
+                <span>EVEN</span>
+                <small id="par-even-pct">0%</small>
+              </div>
+              <div class="parity-pill odd" id="par-live-odd">
+                <span>ODD</span>
+                <small id="par-odd-pct">0%</small>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label>Smart Auto</label>
+            <div>
+              <input id="par-auto" type="checkbox"/>
+              <span class="muted">Fires when selected rule meets threshold</span>
+            </div>
+            <div style="margin-top:8px"><span class="pill">Signal: <span id="par-signal">—</span></span></div>
+            <div style="margin-top:12px" class="right">
+              <button class="btn good" id="par-place">Place Manual Trade</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="kpi">
+          <div class="item"><label>Current Price</label><div id="kpi-price">-</div></div>
+          <div class="item"><label>Total Ticks</label><div id="kpi-ticks">0</div></div>
+          <div class="item"><label>Current Streak</label><div id="kpi-streak">0</div></div>
+          <div class="item"><label>Last Digit</label><div id="kpi-last">-</div></div>
+        </div>
+      </div>
+
+      <!-- All Strategies Comparison card -->
+      <div class="card">
+        <h3 style="margin:0 0 8px">All Strategies Comparison</h3>
+        <small class="muted">
+          Live win-rate across main strategies. This is the logic your Smart Scheduler can use to auto-select the best one

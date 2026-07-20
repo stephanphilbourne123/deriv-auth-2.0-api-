@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mickey Smart AI — Connect Deriv Account</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#020b16;color:#f8fbff;overflow:hidden}.top{height:64px;background:#0d2037;border-bottom:1px solid rgba(0,214,255,.14);display:flex;align-items:center;justify-content:space-between;padding:0 16px}.brand{display:flex;align-items:center;gap:12px;font-weight:1000;color:#00d6ff}.logo{width:36px;height:36px;border-radius:10px;border:1px solid rgba(0,214,255,.45);display:grid;place-items:center;background:rgba(0,214,255,.08);box-shadow:0 0 18px rgba(0,214,255,.14)}.stage{height:calc(100% - 64px);display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(135deg,#60a5fa,#2563eb)}.card{width:min(560px,calc(100vw - 32px));border-radius:16px;background:#07182b;border:1px solid rgba(0,214,255,.24);box-shadow:0 30px 70px rgba(0,0,0,.42);padding:26px;position:relative;overflow:hidden}.grid{position:absolute;inset:0;opacity:.15;background-image:linear-gradient(rgba(0,214,255,.17) 1px,transparent 1px),linear-gradient(90deg,rgba(0,214,255,.14) 1px,transparent 1px);background-size:40px 40px}.inner{position:relative;z-index:1;text-align:center}.state-block{display:none}.state-block.show{display:block}.spinner{width:44px;height:44px;border:4px solid rgba(0,214,255,.16);border-top-color:#00d6ff;border-radius:50%;margin:14px auto 24px;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.check{width:42px;height:42px;border-radius:999px;margin:0 auto 14px;display:grid;place-items:center;color:#00d6ff;border:1px solid rgba(0,214,255,.38);background:rgba(0,214,255,.10);font-size:23px}.xmark{width:42px;height:42px;border-radius:999px;margin:0 auto 14px;display:grid;place-items:center;color:#fb7185;border:1px solid rgba(251,113,133,.38);background:rgba(251,113,133,.10);font-size:23px}.sub{color:#8fb4d1;font-size:13px;margin-top:6px;line-height:1.5}.btn{margin-top:18px;padding:11px 18px;border-radius:10px;border:1px solid rgba(0,214,255,.4);background:rgba(0,214,255,.12);color:#00d6ff;font-weight:800;cursor:pointer;font-size:14px}.btn:hover{background:rgba(0,214,255,.2)}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><div class="logo">⚙</div><div>Mickey Smart AI</div></div></header>
+<main class="stage"><section class="card"><div class="grid"></div><div class="inner">
+
+  <div class="state-block show" id="state-loading">
+    <div class="spinner"></div>
+    <h2 style="margin:0 0 4px">Connecting to Deriv</h2>
+    <div class="sub">Exchanging your authorization code for an access token...</div>
+  </div>
+
+  <div class="state-block" id="state-error">
+    <div class="xmark">✕</div>
+    <h3 style="margin:0">Could not connect</h3>
+    <div class="sub" id="error-text">Deriv did not return an authorization code.</div>
+    <button class="btn" onclick="location.href='/app/'">Back to Dashboard</button>
+  </div>
+
+  <div class="state-block" id="state-success">
+    <div class="check">✓</div>
+    <h3 style="margin:0">Connected!</h3>
+    <div class="sub">Taking you back to your dashboard...</div>
+  </div>
+
+</div></section></main>
+<script>
+(function(){
+  function show(id){
+    ['state-loading','state-error','state-success'].forEach(function(s){
+      document.getElementById(s).classList.toggle('show', s === id);
+    });
+  }
+
+  function fail(message){
+    document.getElementById('error-text').textContent = message;
+    show('state-error');
+  }
+
+  var params = new URLSearchParams(window.location.search || '');
+
+  if (params.get('error')) {
+    fail('Deriv said: ' + (params.get('error_description') || params.get('error')));
+    return;
+  }
+
+  var code = params.get('code');
+  var returnedState = params.get('state');
+
+  if (!code) {
+    fail('No authorization code was returned by Deriv. Check that the Redirect URL configured for this app in Deriv (developers.deriv.com) exactly matches this page\'s URL: ' + window.location.origin + '/deriv/callback');
+    return;
+  }
+
+  var savedState = sessionStorage.getItem('deriv_oauth_state');
+  var codeVerifier = sessionStorage.getItem('deriv_pkce_verifier');
+
+  if (!codeVerifier) {
+    fail('Missing the security code for this login attempt (it may have been started in a different tab/window). Please go back and click "Connect via OAuth" again in this same tab.');
+    return;
+  }
+
+  if (savedState && returnedState && savedState !== returnedState) {
+    fail('Security check failed (state mismatch). Please try connecting again.');
+    return;
+  }
+
+  fetch('https://auth.deriv.com/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: '33wk6T0W5ZsXYqjz3eY90',
+      code: code,
+      code_verifier: codeVerifier,
+      redirect_uri: window.location.origin + '/deriv/callback'
+    }).toString()
+  })
+    .then(function(resp){ return resp.json().then(function(json){ return { ok: resp.ok, json: json }; }); })
+    .then(function(result){
+      if (!result.ok || !result.json || !result.json.access_token) {
+        var desc = (result.json && (result.json.error_description || result.json.error)) || 'Token exchange failed.';
+        fail('Deriv rejected the login: ' + desc);
+        return;
+      }
+
+      try {
+        sessionStorage.removeItem('deriv_pkce_verifier');
+        sessionStorage.removeItem('deriv_oauth_state');
+        localStorage.setItem('deriv_token', result.json.access_token);
+        sessionStorage.setItem('msai_show_account_picker', '1');
+        localStorage.removeItem('deriv_loginid');
+        localStorage.removeItem('deriv_currency');
+        localStorage.removeItem('deriv_accounts');
+      } catch (e) {}
+
+      show('state-success');
+      setTimeout(function(){
+        window.location.replace('/app/?deriv_connected=1');
+      }, 600);
+    })
+    .catch(function(err){
+      fail('Network error while contacting the server: ' + (err && err.message || err));
+    });
+})();
+</script>
+</body>
+</html>
