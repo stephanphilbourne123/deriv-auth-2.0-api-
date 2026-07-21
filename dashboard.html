@@ -246,7 +246,7 @@ main{
 // ✅ CHECK IF LOGGED IN - if not, redirect to login page
 function checkLoginStatus() {
   const token = sessionStorage.getItem('deriv_token');
-  const accountData = sessionStorage.getItem('selected_account');
+  const accountData = sessionStorage.getItem('deriv_selected_account') || sessionStorage.getItem('selected_account');
 
   if (!token || !accountData) {
     console.warn('❌ Not logged in - redirecting to login page');
@@ -259,26 +259,30 @@ function checkLoginStatus() {
 // ✅ LOAD ACCOUNT DATA FROM sessionStorage
 function loadAccountData() {
   try {
-    const accountData = JSON.parse(sessionStorage.getItem('selected_account') || '{}');
+    // Try to load from deriv_selected_account first (new key), fallback to selected_account (old key)
+    const rawData = sessionStorage.getItem('deriv_selected_account') || sessionStorage.getItem('selected_account');
+    const accountData = JSON.parse(rawData || '{}');
     
-    if (!accountData || !accountData.loginid) {
+    if (!accountData || (!accountData.loginid && !accountData.account_id)) {
       console.warn('❌ No account data found');
       checkLoginStatus();
       return;
     }
 
+    // Support both loginid and account_id
+    const loginId = accountData.loginid || accountData.account_id;
     const isDemo = accountData.account_type === 'demo' || accountData.is_virtual;
     const type = isDemo ? 'Demo' : 'Live';
     const icon = isDemo ? '🧪' : '💰';
     const balance = accountData.balance !== undefined ? parseFloat(accountData.balance).toFixed(2) : '0.00';
     const currency = accountData.currency || 'USD';
 
-    document.getElementById('accountId').textContent = accountData.loginid;
+    document.getElementById('accountId').textContent = loginId;
     document.getElementById('accountType').textContent = `${type} Account • ${currency}`;
     document.getElementById('accountBalance').textContent = `${currency} ${balance}`;
     document.querySelector('.account-icon-box').textContent = icon;
-    
-    console.log('✅ Dashboard loaded:', { loginid: accountData.loginid, balance: balance, type: type });
+
+    console.log('✅ Dashboard loaded:', { loginid: loginId, balance: balance, type: type });
   } catch (error) {
     console.error('❌ Error loading account:', error);
     checkLoginStatus();
@@ -287,7 +291,7 @@ function loadAccountData() {
 
 // ✅ LOGOUT FUNCTION
 function logoutUser() {
-  const keys = ['deriv_token', 'deriv_user_id', 'selected_account', 'access_token', 'oauth_token'];
+  const keys = ['deriv_token', 'deriv_user_id', 'selected_account', 'deriv_selected_account', 'access_token', 'oauth_token'];
   keys.forEach(key => {
     sessionStorage.removeItem(key);
     localStorage.removeItem(key);
