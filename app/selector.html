@@ -92,6 +92,10 @@
       background: rgba(34, 224, 138, 0.15);
       box-shadow: 0 0 18px rgba(34, 224, 138, 0.3);
     }
+    .account-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     .account-icon {
       width: 40px;
       height: 40px;
@@ -180,6 +184,15 @@
       margin-bottom: 16px;
       font-size: 13px;
     }
+    .demo-only-badge {
+      background: rgba(251, 113, 133, 0.2);
+      color: #ff6b9d;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
   </style>
 </head>
 <body>
@@ -188,7 +201,7 @@
       <div class="selector-icon">✓</div>
       <div class="selector-title">Authentication Successful</div>
     </div>
-    <div class="selector-sub">Select an account to start trading</div>
+    <div class="selector-sub">Select Demo or Live account to start trading</div>
     <div id="errorMsg" class="error" style="display: none;"></div>
     <div class="filter-tabs">
       <button class="filter-tab active" data-filter="all">All Accounts</button>
@@ -322,8 +335,15 @@
           const accountsData = await readJsonResponse(accountsResponse);
           console.log('✅ Accounts response:', accountsData);
           
-          if (!accountsData.success) {
-            throw new Error(accountsData.error || 'Failed to fetch accounts');
+          if (accountsResponse.status === 401 || accountsResponse.status === 403) {
+            await handleExpiredToken(
+              accountsData.error || 'Your Deriv session has expired.'
+            );
+            return;
+          }
+          
+          if (!accountsResponse.ok || !accountsData.success) {
+            throw new Error(accountsData.error || `Failed to fetch accounts (${accountsResponse.status})`);
           }
 
           if (accountsData.account_list && Array.isArray(accountsData.account_list)) {
@@ -406,9 +426,9 @@
       
       let filteredAccounts = accounts;
       if (currentFilter === 'demo') {
-        filteredAccounts = accounts.filter(a => a.account_type === 'demo');
+        filteredAccounts = accounts.filter(a => a.account_type === 'demo' || a.is_virtual);
       } else if (currentFilter === 'live') {
-        filteredAccounts = accounts.filter(a => a.account_type !== 'demo');
+        filteredAccounts = accounts.filter(a => a.account_type !== 'demo' && !a.is_virtual);
       }
 
       if (filteredAccounts.length === 0) {
@@ -418,14 +438,32 @@
 
       filteredAccounts.forEach((account) => {
         const item = document.createElement('div');
-        item.className = 'account-item';
-        item.onclick = () => selectAccount(account, item);
-        
-        const type = account.account_type === 'demo' ? 'DEMO' : 'LIVE';
-        const badgeClass = account.account_type === 'demo' ? 'badge-demo' : 'badge-live';
-        const icon = account.account_type === 'demo' ? '🧪' : '💰';
+        const isDemo = account.account_type === 'demo' || account.is_virtual;
+        const type = isDemo ? 'DEMO' : 'LIVE';
+        const badgeClass = isDemo ? 'badge-demo' : 'badge-live';
+        const icon = isDemo ? '🧪' : '💰';
         const balance = accountBalances[account.loginid];
         const balanceAmount = balance ? `${balance.currency} ${balance.amount.toFixed(2)}` : 'Loading...';
+        
+        item.className = 'account-item';
+        
+        // Live accounts currently disabled for safety
+        if (!isDemo) {
+          item.classList.add('disabled');
+        }
+        
+        item.onclick = () => {
+          if (!isDemo) {
+            console.log('⚠️ Live trading disabled for safety');
+            return;
+          }
+          selectAccount(account, item);
+        };
+        
+        let liveIndicator = '';
+        if (!isDemo) {
+          liveIndicator = '<span class="demo-only-badge">Coming Soon</span>';
+        }
         
         item.innerHTML = `
           <div style="display: flex; align-items: center; flex: 1;">
@@ -435,6 +473,7 @@
               <div class="account-type">
                 <span class="account-badge ${badgeClass}">${type}</span>
                 <span>${account.currency}</span>
+                ${liveIndicator}
               </div>
             </div>
           </div>
