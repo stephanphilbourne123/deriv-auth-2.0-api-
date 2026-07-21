@@ -198,235 +198,225 @@
     font-weight:800;
     margin-bottom:6px;
   }
-  .hero-desc{
+  .hero-sub{
     font-size:13px;
-    line-height:1.5;
     color:var(--muted);
     margin-bottom:16px;
+    line-height:1.5;
   }
-  .hero-pills{
+
+  .pill-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:12px;
+  }
+  .pill{
+    font-size:11px;
+    padding:6px 9px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(35,35,70,.96);
+    color:var(--muted);
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+  }
+  .pill strong{color:#ffffff;font-weight:600;}
+
+  .price-card{
+    margin-top:8px;
+    background:linear-gradient(90deg,#ff4b91,#ff6a00);
+    border-radius:14px;
+    padding:10px 12px;
+    font-size:12px;
+    font-weight:600;
+    text-align:center;
+    box-shadow:0 12px 24px rgba(0,0,0,.5);
+  }
+  .price-sub{
+    font-size:11px;
+    margin-top:4px;
+    opacity:.9;
+  }
+
+  .cta-row{
+    margin-top:14px;
     display:flex;
     flex-wrap:wrap;
     gap:8px;
   }
-  .pill{
+  .cta-btn{
+    border:none;
+    border-radius:999px;
+    padding:10px 14px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
     display:inline-flex;
     align-items:center;
-    gap:4px;
-    padding:6px 12px;
-    border-radius:999px;
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.10);
-    font-size:11px;
-    font-weight:600;
-    color:var(--muted);
+    gap:6px;
+    text-decoration:none;
+  }
+  .cta-primary{
+    background:linear-gradient(90deg,#30c6ff,#13a8ff);
+    color:#fff;
+    box-shadow:0 10px 25px rgba(0,0,0,.65);
+  }
+  .cta-ghost{
+    background:rgba(30,30,70,.96);
+    border:1px solid rgba(255,255,255,.15);
+    color:var(--text);
   }
 
-  /* right side */
-  .auth{
+  .risk-note{
+    margin-top:12px;
+    font-size:10px;
+    color:var(--muted);
+    opacity:.9;
+    display:flex;
+    gap:6px;
+    align-items:flex-start;
+  }
+  .risk-note span.icon{
+    color:var(--danger); font-size:12px; margin-top:1px;
+  }
+
+  /* right side: LOGIN PANEL */
+  .auth-card{
+    background:linear-gradient(160deg,#0f1c3f,#1a2b6c,#6a11cb);
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.18);
+    padding:16px 16px 13px;
     display:flex;
     flex-direction:column;
+    gap:10px;
+    box-shadow:0 18px 35px rgba(0,0,0,.7);
   }
-  .auth-top{
-    flex:1;
+  .auth-head{
     display:flex;
-    flex-direction:column;
-  }
-  .auth-block{
-    margin-bottom:16px;
-  }
-  .auth-lock{
-    font-size:18px;
-    margin-bottom:10px;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:4px;
   }
   .auth-title{
-    font-size:18px;
-    font-weight:900;
-    margin-bottom:6px;
-    color:var(--text);
+    font-size:15px;
+    font-weight:700;
   }
   .auth-sub{
     font-size:12px;
-    color:var(--muted);
-    margin-bottom:10px;
-    line-height:1.4;
+    color:#ffd3d9;
+    margin-bottom:8px;
   }
-  .sign-btn{
-    width:100%;
-    padding:12px;
-    border:none;
-    border-radius:10px;
-    background:linear-gradient(90deg,#22c55e,#4ade80);
-    color:#1a1a1a;
-    font-weight:800;
-    font-size:14px;
-    cursor:pointer;
-    transition:all .2s;
-  }
-  .sign-btn:hover{
-    transform:translateY(-2px);
-    box-shadow:0 8px 20px rgba(34,197,94,.4);
-  }
-  .or-line{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin:12px 0;
-  }
-  .or-line span{
-    flex:1;
-    height:1px;
-    background:rgba(255,255,255,.08);
-  }
-  .or-text{
-    font-size:11px;
-    color:var(--muted);
-    text-transform:uppercase;
-    font-weight:600;
-  }
-  .oauth-btn{
-    width:100%;
-    padding:12px;
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:10px;
-    background:rgba(24,6,15,.90);
-    color:var(--text);
-    font-weight:700;
-    font-size:14px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    transition:all .2s;
-  }
-  .oauth-btn:hover{
-    background:rgba(36,10,20,.95);
-    border-color:rgba(255,255,255,.20);
-  }
-  .auth-note{
-    font-size:11px;
-    color:var(--muted);
-    text-align:center;
-    margin-top:12px;
-  }
-  .auth-note a{
-    color:var(--accent1);
-    text-decoration:none;
-  }
-  .auth-note a:hover{
-    text-decoration:underline;
+  .lock-icon{
+    width:30px;height:30px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+    box-shadow:0 0 15px rgba(255,213,74,.9);
   }
 
+  .btn-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .btn{
+    cursor:pointer;
+    border:none;
+    border-radius:999px;
+    padding:10px 14px;
+    font-weight:600;
+    font-size:13px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    width:100%;
+  }
+  .btn.primary{
+    background:linear-gradient(90deg,#22e08a,#0bbf56);
+    color:#06130b;
+    box-shadow:0 10px 24px rgba(0,0,0,.7);
+  }
+  .btn.secondary{
+    background:rgba(40,8,18,.9);
+    border:1px solid rgba(255,255,255,.35);
+    color:#ffe7e7;
+  }
+  .status{
+    font-size:11px;
+    color:#ffd3d9;
+    margin-top:2px;
+  }
 </style>
 </head>
 <body>
-
-<div class="float-wrap" id="floats"></div>
+<div class="float-wrap"></div>
 
 <div class="shell">
-  <nav class="nav">
+  <header class="nav">
     <div class="nav-left">
-      <div class="logo-dot">⚙</div>
-      <span class="nav-title">Mickey Smart AI</span>
-      <span class="nav-tag">AI Trading • Deriv</span>
+      <div class="logo-dot">⚡</div>
+      <div class="nav-title">Mickey Smart AI</div>
+      <div class="nav-tag">Beta</div>
     </div>
     <div class="nav-right">
-      <a href="#" class="nav-link">Support</a>
-      <a href="#" class="nav-link">Welcome</a>
-      <button class="nav-btn">Login</button>
+      <a href="#" class="nav-link">Docs</a>
+      <button class="nav-btn">Contact</button>
     </div>
-  </nav>
+  </header>
 
-  <div class="main">
+  <main class="main">
     <div class="wrap">
       <div class="hero">
-        <div class="hero-label">Smart Automation • 24/7</div>
-        <h1 class="hero-title">Login to Mickey Smart AI</h1>
-        <p class="hero-desc">
-          Connect to your private trading dashboard, manage your risk, and let the AI watch the charts while you focus on real life.
-        </p>
-        <div class="hero-pills">
-          <div class="pill">🤖 AI for Deriv</div>
-          <div class="pill">⚠️ Risk management</div>
-          <div class="pill">📊 Real-time monitoring</div>
+        <div class="hero-label">🎯 Welcome</div>
+        <div class="hero-title">Connect Your Deriv Account</div>
+        <div class="hero-sub">Sign in with your Deriv credentials to access your trading dashboard and manage your accounts.</div>
+
+        <div class="pill-row">
+          <div class="pill"><strong>✓</strong> Secure OAuth</div>
+          <div class="pill"><strong>✓</strong> Real-time Data</div>
+          <div class="pill"><strong>✓</strong> Multi-Account</div>
+        </div>
+
+        <div class="price-card">
+          🎄 New Year 2025 — Enhanced Dashboard
+          <div class="price-sub">Faster, Smarter, Better</div>
+        </div>
+
+        <div class="cta-row">
+          <a href="#" class="cta-btn cta-ghost">Learn More →</a>
+        </div>
+
+        <div class="risk-note">
+          <span class="icon">⚠️</span>
+          <span>Trading involves risk. Always manage your portfolio carefully.</span>
         </div>
       </div>
 
-      <div class="auth">
-        <div class="auth-top">
-          <div class="auth-block">
-            <div class="auth-lock">🔐</div>
-            <div class="auth-title">Secure Login</div>
-            <div class="auth-sub">Use Deriv OAuth to sign in securely and access your dashboard.</div>
-            <button class="sign-btn" onclick="startOAuth()">Sign in / Sign up</button>
-          </div>
-
-          <div class="or-line">
-            <span></span>
-            <span class="or-text">OR</span>
-            <span></span>
-          </div>
-
-          <div class="auth-block">
-            <div class="auth-title" style="font-size:14px;">API Connection</div>
-            <div class="auth-sub">Paste your Deriv API token for manual access.</div>
-            <button class="oauth-btn" onclick="alert('API method coming soon')">
-              🔑 Enter API Token
-            </button>
-          </div>
+      <div class="auth-card">
+        <div class="auth-head">
+          <div class="auth-title">Sign In</div>
+          <div class="lock-icon">🔐</div>
         </div>
+        <div class="auth-sub">Go to Dashboard</div>
 
-        <div class="auth-note">
-          💬 <a href="#">Message us on Telegram</a> for setup help or questions
+        <div class="btn-row">
+          <button class="btn primary" id="login-btn">🚀 Enter Dashboard</button>
         </div>
+        <div class="status" id="status-msg"></div>
       </div>
     </div>
-  </div>
+  </main>
 </div>
 
 <script>
-function startOAuth(){
-  // Generate PKCE
-  var codeVerifier = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-    .map(b => String.fromCharCode(b))
-    .join('');
-  codeVerifier = btoa(codeVerifier).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-
-  var state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
-    .map(b => b.toString(16).padStart(2,'0'))
-    .join('');
-
-  sessionStorage.setItem('deriv_pkce_verifier', codeVerifier);
-  sessionStorage.setItem('deriv_oauth_state', state);
-
-  var params = new URLSearchParams({
-    response_type: 'code',
-    client_id: 'YOUR_CLIENT_ID', // Replace with your actual client ID
-    redirect_uri: window.location.origin + '/smart-ai-bot-6-account-picker-fixed/deriv/callback',
-    scope: 'read profile',
-    state: state,
-    code_challenge: btoa(String.fromCharCode(...new Uint8Array(Array.from(codeVerifier).reduce((a,c)=>[...a,c.charCodeAt(0)],[])))),
-    code_challenge_method: 'S256'
-  });
-
-  window.location.href = 'https://oauth.deriv.com/oauth2/authorize?' + params.toString();
-}
-
-// Floating emojis
-var emojis = ['🤖','📊','💰','⚡','🎯','🚀','📈','🔐'];
-var floatWrap = document.getElementById('floats');
-for(var i=0;i<12;i++){
-  var emoji = document.createElement('div');
-  emoji.className = 'float-emoji ' + ['small','med','big'][Math.floor(Math.random()*3)];
-  emoji.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-  emoji.style.left = Math.random()*100 + '%';
-  emoji.style.top = Math.random()*100 + '%';
-  emoji.style.animationDelay = Math.random()*16 + 's';
-  emoji.style.animationDuration = (10+Math.random()*12) + 's';
-  floatWrap.appendChild(emoji);
-}
+document.getElementById('login-btn').addEventListener('click', function() {
+  window.location.href = '/smart-ai-bot-6-account-picker-fixed/app/index.html';
+});
 </script>
-
 </body>
 </html>
