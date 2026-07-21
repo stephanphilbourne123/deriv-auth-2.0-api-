@@ -220,7 +220,6 @@
   <script>
     let selectedAccount = null;
     let accounts = [];
-    let accountBalances = {};
     let currentFilter = 'all';
     let token = null;
     let loadingStarted = false;
@@ -349,6 +348,11 @@
           if (accountsData.account_list && Array.isArray(accountsData.account_list)) {
             accounts = accountsData.account_list;
             console.log('📈 Found', accounts.length, 'accounts');
+            console.log('💰 Balances from accounts endpoint:', accounts.map(a => ({
+              loginid: a.loginid,
+              balance: a.balance,
+              currency: a.currency
+            })));
             
             if (accounts.length === 0) {
               errorMsg.style.display = 'block';
@@ -357,7 +361,7 @@
               return;
             }
             
-            await fetchBalancesForAllAccounts(token, accounts);
+            // ✅ FIXED: Use balance from accounts response directly (Option 2)
             displayAccounts(accounts);
           } else {
             throw new Error('No account list returned');
@@ -370,53 +374,6 @@
         errorMsg.style.display = 'block';
         errorMsg.textContent = '❌ ' + error.message;
         accountsList.innerHTML = '';
-      }
-    }
-
-    async function fetchBalancesForAllAccounts(token, accounts) {
-      console.log('💰 Fetching balances for', accounts.length, 'accounts...');
-      for (const account of accounts) {
-        try {
-          const balanceResponse = await fetch('/.netlify/functions/balance', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              loginid: account.loginid
-            })
-          });
-          
-          const balanceData = await readJsonResponse(balanceResponse);
-          console.log('✅ Balance response for', account.loginid, ':', balanceResponse.status);
-
-          if (balanceResponse.status === 401 || balanceResponse.status === 403) {
-            await handleExpiredToken(
-              balanceData.error || 'Your Deriv session expired while loading balances.'
-            );
-            return;
-          }
-          
-          if (balanceData.success && balanceData.balance) {
-            accountBalances[account.loginid] = {
-              amount: balanceData.balance.balance,
-              currency: balanceData.balance.currency
-            };
-          } else if (balanceData.error) {
-            console.warn('⚠️ Error fetching balance for', account.loginid, ':', balanceData.error);
-            accountBalances[account.loginid] = {
-              amount: 0,
-              currency: account.currency || 'USD'
-            };
-          }
-        } catch (error) {
-          console.error('❌ Error fetching balance for', account.loginid, ':', error);
-          accountBalances[account.loginid] = {
-            amount: 0,
-            currency: account.currency || 'USD'
-          };
-        }
       }
     }
 
@@ -442,28 +399,18 @@
         const type = isDemo ? 'DEMO' : 'LIVE';
         const badgeClass = isDemo ? 'badge-demo' : 'badge-live';
         const icon = isDemo ? '🧪' : '💰';
-        const balance = accountBalances[account.loginid];
-        const balanceAmount = balance ? `${balance.currency} ${balance.amount.toFixed(2)}` : 'Loading...';
+        
+        // ✅ FIXED: Use balance from account object directly (no separate balance fetch)
+        const balanceAmount = account.balance !== undefined && account.balance !== null
+          ? `${account.currency || 'USD'} ${parseFloat(account.balance).toFixed(2)}`
+          : `${account.currency || 'USD'} 0.00`;
         
         item.className = 'account-item';
         
-        // Live accounts currently disabled for safety
-        if (!isDemo) {
-          item.classList.add('disabled');
-        }
-        
+        // ✅ Live accounts now ENABLED (no longer disabled)
         item.onclick = () => {
-          if (!isDemo) {
-            console.log('⚠️ Live trading disabled for safety');
-            return;
-          }
           selectAccount(account, item);
         };
-        
-        let liveIndicator = '';
-        if (!isDemo) {
-          liveIndicator = '<span class="demo-only-badge">Coming Soon</span>';
-        }
         
         item.innerHTML = `
           <div style="display: flex; align-items: center; flex: 1;">
@@ -473,7 +420,6 @@
               <div class="account-type">
                 <span class="account-badge ${badgeClass}">${type}</span>
                 <span>${account.currency}</span>
-                ${liveIndicator}
               </div>
             </div>
           </div>
@@ -504,7 +450,7 @@
       try {
         const accountData = {
           ...selectedAccount,
-          balance: accountBalances[selectedAccount.loginid]
+          balance: selectedAccount.balance
         };
         sessionStorage.setItem('selected_account', JSON.stringify(accountData));
         sessionStorage.setItem('deriv_token', token);
