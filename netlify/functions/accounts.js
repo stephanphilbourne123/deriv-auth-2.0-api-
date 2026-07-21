@@ -48,21 +48,23 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('🚀 Requesting account list from Deriv API...');
+    console.log('🚀 Requesting account list from Deriv Options API...');
     
-    // Use the correct OAuth-compatible REST endpoint
-    const accountsUrl = 'https://api.deriv.com/api/v3/accounts';
+    // Use the correct NEW Options API endpoint (NOT legacy /api/v3)
+    const accountsUrl = 'https://api.derivws.com/trading/v1/options/accounts';
     const fetchOptions = {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        'Deriv-App-ID': process.env.DERIV_APP_ID || '33wk6T0W5ZsXYqjz3eY90',
         'Authorization': `Bearer ${token}`,
-        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90'
-      }
+        'Accept': 'application/json'
+      },
+      redirect: 'manual'
     };
 
     console.log('📍 Accounts endpoint:', accountsUrl);
     console.log('📌 Request method: GET');
+    console.log('🔑 App ID source:', process.env.DERIV_APP_ID ? 'environment variable' : 'hardcoded');
     
     const response = await fetch(accountsUrl, fetchOptions);
     
@@ -113,27 +115,26 @@ exports.handler = async (event, context) => {
 
     // Format accounts for frontend
     const formattedAccounts = [];
+    
+    // Handle different response formats from Deriv Options API
+    let accountsList = [];
     if (Array.isArray(accountsData)) {
-      accountsData.forEach(account => {
-        formattedAccounts.push({
-          loginid: account.loginid,
-          account_type: account.account_type || 'demo',
-          currency: account.currency,
-          is_virtual: account.is_virtual === 1,
-          balance: account.balance || 0
-        });
-      });
+      accountsList = accountsData;
     } else if (accountsData.accounts && Array.isArray(accountsData.accounts)) {
-      accountsData.accounts.forEach(account => {
-        formattedAccounts.push({
-          loginid: account.loginid,
-          account_type: account.account_type || 'demo',
-          currency: account.currency,
-          is_virtual: account.is_virtual === 1,
-          balance: account.balance || 0
-        });
-      });
+      accountsList = accountsData.accounts;
+    } else if (accountsData.data && Array.isArray(accountsData.data)) {
+      accountsList = accountsData.data;
     }
+
+    accountsList.forEach(account => {
+      formattedAccounts.push({
+        loginid: account.loginid,
+        account_type: account.account_type || 'demo',
+        currency: account.currency,
+        is_virtual: account.is_virtual === 1,
+        balance: account.balance || 0
+      });
+    });
 
     console.log('✅ Accounts formatted successfully!', formattedAccounts.length, 'accounts ready for display');
     
