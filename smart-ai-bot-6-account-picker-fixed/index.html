@@ -415,7 +415,16 @@
 
 <script>
 document.getElementById('login-btn').addEventListener('click', function() {
-  window.location.href = '/smart-ai-bot-6-account-picker-fixed/app/index.html';
+  // Set mock account data so dashboard loads
+  sessionStorage.setItem('deriv_selected_account', JSON.stringify({
+    account_id: 'DEMO123456789',
+    account_type: 'demo',
+    balance: 10000,
+    currency: 'USD'
+  }));
+  
+  // Redirect to the actual dashboard with strategies
+  window.location.href = './smart-ai-bot-6-account-picker-fixed/app/index.html';
 });
 </script>
 </body>
