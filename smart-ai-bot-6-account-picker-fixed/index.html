@@ -374,10 +374,10 @@
       <div class="hero">
         <div class="hero-label">🎯 Welcome</div>
         <div class="hero-title">Connect Your Deriv Account</div>
-        <div class="hero-sub">Sign in with your Deriv credentials to access your trading dashboard and manage your accounts.</div>
+        <div class="hero-sub">Sign in with your invited email and password to access your trading dashboard and manage your accounts.</div>
 
         <div class="pill-row">
-          <div class="pill"><strong>✓</strong> Secure OAuth</div>
+          <div class="pill"><strong>✓</strong> Secure Login</div>
           <div class="pill"><strong>✓</strong> Real-time Data</div>
           <div class="pill"><strong>✓</strong> Multi-Account</div>
         </div>
@@ -402,10 +402,10 @@
           <div class="auth-title">Sign In</div>
           <div class="lock-icon">🔐</div>
         </div>
-        <div class="auth-sub">Go to Dashboard</div>
+        <div class="auth-sub">Enter your credentials</div>
 
         <div class="btn-row">
-          <button class="btn primary" id="login-btn">🚀 Enter Dashboard</button>
+          <button type="button" class="btn primary identity-login-btn">🚀 Login</button>
         </div>
         <div class="status" id="status-msg"></div>
       </div>
@@ -413,19 +413,45 @@
   </main>
 </div>
 
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
 <script>
-document.getElementById('login-btn').addEventListener('click', function() {
-  // Set mock account data so dashboard loads
-  sessionStorage.setItem('deriv_selected_account', JSON.stringify({
-    account_id: 'DEMO123456789',
-    account_type: 'demo',
-    balance: 10000,
-    currency: 'USD'
-  }));
-  
-  // Redirect to the actual dashboard with strategies
-  window.location.href = './smart-ai-bot-6-account-picker-fixed/app/index.html';
+document.addEventListener('DOMContentLoaded', function () {
+  const identity = window.netlifyIdentity;
+  const loginButtons = document.querySelectorAll('.identity-login-btn');
+
+  loginButtons.forEach(function (button) {
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+
+      if (!identity) {
+        alert('Login could not load. Please refresh the page.');
+        return;
+      }
+
+      // Already signed in
+      if (identity.currentUser()) {
+        window.location.replace('/app/');
+        return;
+      }
+
+      // Open email/password login
+      identity.open('login');
+    });
+  });
+
+  if (!identity) return;
+
+  identity.on('login', function (user) {
+    if (!user) return;
+
+    identity.close();
+    window.location.replace('/app/');
+  });
+
+  identity.init();
 });
 </script>
+
 </body>
 </html>
