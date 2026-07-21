@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mickey Smart AI — Account Balance</title>
+<style>
+:root{--bg-1:#061629;--bg-2:#0a3d91;--bg-3:#6a11cb;--card:rgba(10,18,34,0.72);--text:#f7fbff;--muted:rgba(235,245,255,0.78);--accent:#38bdf8;--good:#22c55e;--bad:#fb7185;--border:rgba(120,200,255,0.22);}
+*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
+body{color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at 12% 18%, rgba(255,255,255,0.22), transparent 52%),radial-gradient(circle at 88% 78%, rgba(255,255,255,0.16), transparent 55%),radial-gradient(circle at 30% 85%, rgba(56,189,248,0.35), transparent 60%),radial-gradient(circle at 85% 25%, rgba(106,17,203,0.28), transparent 62%),linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));overflow-y:auto;}
+.container{max-width:600px;margin:40px auto;padding:20px;}
+.balance-card{background:linear-gradient(135deg, rgba(34,197,94,0.12), rgba(56,189,248,0.08));border:1px solid rgba(56,189,248,0.3);border-radius:18px;padding:24px;box-shadow:0 0 30px rgba(56,189,248,0.15);}
+.balance-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.balance-info{display:flex;align-items:center;gap:12px;}
+.account-avatar{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg, rgba(56,189,248,0.3), rgba(34,197,94,0.2));display:flex;align-items:center;justify-content:center;font-size:24px;}
+.balance-meta h3{margin:0 0 4px 0;font-size:16px;font-weight:700;}
+.balance-meta p{margin:0;font-size:12px;color:var(--muted);}
+.status-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);font-size:12px;font-weight:600;color:var(--good);}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--good);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.balance-display{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.balance-item{background:rgba(0,0,0,0.3);border:1px solid rgba(250,250,250,0.08);border-radius:12px;padding:12px;}
+.balance-item label{font-size:11px;color:var(--muted);margin:0 0 4px 0;font-weight:500;display:block;}
+.balance-item .value{font-size:18px;font-weight:700;color:var(--good);margin:0;}
+.balance-actions{display:flex;gap:10px;}
+.btn{padding:12px;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:14px;flex:1;}
+.btn-primary{background:linear-gradient(90deg, var(--accent), #0ea5e9);color:var(--text);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(56,189,248,0.3);}
+.btn-danger{border:1px solid rgba(251,113,133,0.4);background:rgba(251,113,133,0.1);color:var(--bad);}
+.btn-danger:hover{background:rgba(251,113,133,0.2);}
+.btn-next{background:linear-gradient(90deg, #16a34a, #4ade80);color:var(--text);width:100%;margin-top:10px;}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(34,197,94,0.3);}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="balance-card">
+    <div class="balance-header">
+      <div class="balance-info">
+        <div class="account-avatar" id="accountAvatar">💰</div>
+        <div class="balance-meta">
+          <h3 id="accountLoginId">Account ID</h3>
+          <p id="accountType">Loading...</p>
+        </div>
+      </div>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span>Connected</span>
+      </div>
+    </div>
+    
+    <div class="balance-display">
+      <div class="balance-item">
+        <label>Account Balance</label>
+        <p class="value" id="accountBalance">USD 0.00</p>
+      </div>
+      <div class="balance-item">
+        <label>P/L (Today)</label>
+        <p class="value" id="accountPL">USD 0.00</p>
+      </div>
+    </div>
+    
+    <div class="balance-actions">
+      <button class="btn btn-primary" onclick="goToSelector()">Switch</button>
+      <button class="btn btn-danger" onclick="disconnect()">Disconnect</button>
+    </div>
+    
+    <button class="btn btn-next" onclick="goToDashboard()">Go to Dashboard →</button>
+  </div>
+</div>
+
+<script>
+function loadBalance() {
+  try {
+    const data = JSON.parse(sessionStorage.getItem('deriv_selected_account') || '{}');
+    if (!data.account_id) {
+      window.location.replace('/app/selector.html');
+      return;
+    }
+    const isDemo = data.account_type === 'demo';
+    document.getElementById('accountAvatar').textContent = isDemo ? '🧪' : '💰';
+    document.getElementById('accountLoginId').textContent = data.account_id;
+    document.getElementById('accountType').textContent = (isDemo ? 'Demo' : 'Live') + ' • ' + (data.currency || 'USD');
+    document.getElementById('accountBalance').textContent = (data.currency || 'USD') + ' ' + (parseFloat(data.balance || 0).toFixed(2));
+  } catch (e) {
+    window.location.replace('/app/selector.html');
+  }
+}
+
+function goToDashboard() {
+  window.location.replace('/app/index.html');
+}
+
+function goToSelector() {
+  window.location.replace('/app/selector.html');
+}
+
+function disconnect() {
+  if (confirm('Disconnect account?')) {
+    ['deriv_token','deriv_selected_account','deriv_connected','selected_account','deriv_user_id','deriv_token_type','deriv_token_expires'].forEach(k => {
+      sessionStorage.removeItem(k);
+      localStorage.removeItem(k);
+    });
+    window.location.replace('/');
+  }
+}
+
+window.addEventListener('load', loadBalance);
+</script>
+
+</body>
+</html>
