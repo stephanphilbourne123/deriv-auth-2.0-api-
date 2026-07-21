@@ -127,96 +127,95 @@
   </div>
 
   <script>
-    // Deriv OAuth Configuration
+    // Deriv OAuth 2.0 + PKCE Configuration
     const DERIV_CLIENT_ID = '33wk6T0W5ZsXYqjz3eY90';
-    const DERIV_OAUTH_URL = 'https://oauth.deriv.com/oauth2/authorize';
-    const REDIRECT_URI = window.location.origin + '/.netlify/functions/callback';
-    const SCOPE = 'read write';
+    const DERIV_OAUTH_URL = 'https://auth.deriv.com/oauth2/auth';
+    const REDIRECT_URI = window.location.origin + '/deriv/callback';
+    const SCOPE = 'read write trade';
 
-    function startOAuthFlow() {
-      const btn = document.getElementById('derivLoginBtn');
-      const btnText = document.getElementById('btnText');
-      
-      btn.disabled = true;
-      btnText.textContent = 'Redirecting...';
+    // PKCE helper: base64url encode a Uint8Array
+    function base64urlEncode(buffer) {
+      return btoa(String.fromCharCode(...buffer))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+    }
 
-      console.log('🚀 Starting OAuth flow...');
-      console.log('Client ID:', DERIV_CLIENT_ID);
-      console.log('Redirect URI:', REDIRECT_URI);
+    // Generate a cryptographically random code_verifier (64 bytes → 86-char base64url string)
+    function generateCodeVerifier() {
+      const array = new Uint8Array(64);
+      crypto.getRandomValues(array);
+      return base64urlEncode(array);
+    }
 
-      // Generate state for CSRF protection
-      const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      sessionStorage.setItem('oauth_state', state);
-      console.log('State:', state);
-
-      // Build OAuth URL
-      const params = new URLSearchParams({
-        client_id: DERIV_CLIENT_ID,
-        redirect_uri: REDIRECT_URI,
-        response_type: 'code',
-        scope: SCOPE,
-        state: state
-      });
-
-      const authUrl = `${DERIV_OAUTH_URL}?${params.toString()}`;
-      console.log('✅ OAuth URL ready. Redirecting...');
-      
-      // Redirect to Deriv OAuth
-      window.location.href = authUrl;
+    // Derive code_challenge = BASE64URL(SHA-256(code_verifier))
+    async function generateCodeChallenge(codeVerifier) {
+      const data = new TextEncoder().encode(codeVerifier);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      return base64urlEncode(new Uint8Array(digest));
     }
 
     function showError(message) {
       const errorMsg = document.getElementById('errorMsg');
       errorMsg.textContent = message;
       errorMsg.style.display = 'block';
+      const btn = document.getElementById('derivLoginBtn');
+      btn.disabled = false;
+      document.getElementById('btnText').textContent = 'Sign In with Deriv';
       console.error('❌', message);
     }
 
-    function showSuccess(message) {
-      const successMsg = document.getElementById('successMsg');
-      successMsg.textContent = message;
-      successMsg.style.display = 'block';
-      console.log('✅', message);
-    }
+    async function startOAuthFlow() {
+      const btn = document.getElementById('derivLoginBtn');
+      const btnText = document.getElementById('btnText');
 
-    // Check if we're returning from OAuth callback with token in URL
-    function checkForToken() {
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get('token');
-      const tokenType = params.get('token_type') || 'Bearer';
-      const expiresIn = params.get('expires_in');
+      btn.disabled = true;
+      btnText.textContent = 'Redirecting...';
 
-      if (token) {
-        console.log('✅ Token received from callback!');
-        showSuccess('✅ Authentication successful! Redirecting...');
-        
-        // Save token to sessionStorage
-        sessionStorage.setItem('deriv_token', token);
-        sessionStorage.setItem('deriv_token_type', tokenType);
-        if (expiresIn) sessionStorage.setItem('deriv_token_expires', expiresIn);
-        
-        console.log('Token saved to sessionStorage');
-        console.log('Token length:', token.length, 'characters');
-        console.log('Token type:', tokenType);
-        
-        // Clear URL parameters for security
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Redirect to account selector
-        setTimeout(() => {
-          console.log('Redirecting to account selector...');
-          window.location.href = '/app/selector.html';
-        }, 1500);
+      console.log('🚀 Starting Deriv OAuth 2.0 + PKCE flow...');
+      console.log('Client ID:', DERIV_CLIENT_ID);
+      console.log('Redirect URI:', REDIRECT_URI);
+
+      try {
+        // 1. Generate PKCE pair
+        const codeVerifier = generateCodeVerifier();
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+        // 2. Generate state for CSRF protection
+        const state = base64urlEncode(crypto.getRandomValues(new Uint8Array(16)));
+
+        // 3. Persist PKCE verifier and state for the callback page
+        sessionStorage.setItem('deriv_pkce_verifier', codeVerifier);
+        sessionStorage.setItem('deriv_oauth_state', state);
+
+        console.log('PKCE code_challenge ready');
+        console.log('State:', state);
+
+        // 4. Build the authorization URL
+        const params = new URLSearchParams({
+          client_id: DERIV_CLIENT_ID,
+          redirect_uri: REDIRECT_URI,
+          response_type: 'code',
+          scope: SCOPE,
+          state: state,
+          code_challenge: codeChallenge,
+          code_challenge_method: 'S256'
+        });
+
+        const authUrl = DERIV_OAUTH_URL + '?' + params.toString();
+        console.log('✅ Authorization URL built. Redirecting to Deriv...');
+
+        // 5. Redirect user to Deriv's authorization page
+        window.location.href = authUrl;
+      } catch (err) {
+        console.error('❌ Failed to start OAuth flow:', err);
+        showError('Failed to start login: ' + (err.message || err));
       }
     }
 
-    // Event listeners
     document.getElementById('derivLoginBtn').addEventListener('click', startOAuthFlow);
 
-    // Check on page load
-    window.addEventListener('load', checkForToken);
-
-    console.log('🔧 Deriv OAuth Login Page Loaded');
+    console.log('🔧 Deriv OAuth + PKCE Login Page Loaded');
     console.log('Client ID:', DERIV_CLIENT_ID);
   </script>
 </body>
