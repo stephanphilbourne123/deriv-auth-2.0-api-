@@ -5,9 +5,9 @@ function makeDerivRequest(payload, token) {
     const postData = JSON.stringify(payload);
     
     const options = {
-      hostname: 'api.deriv.com',
+      hostname: 'api.derivws.com',
       port: 443,
-      path: '/api/v3',
+      path: '/trading/v1/accounts',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -17,10 +17,17 @@ function makeDerivRequest(payload, token) {
       }
     };
 
-    console.log('🔌 Connecting to Deriv API...');
+    console.log('🔌 Connecting to Deriv Trading API...');
+    console.log('Hostname:', options.hostname);
+    console.log('Path:', options.path);
+    console.log('Method:', options.method);
     
     const req = https.request(options, (res) => {
       console.log('📨 Response status:', res.statusCode);
+      console.log('Upstream status:', res.statusCode);
+      console.log('Upstream content type:', res.headers['content-type']);
+      console.log('Redirect location:', res.headers['location']);
+      
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
@@ -103,12 +110,14 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('🚀 Requesting account list from Deriv...');
+    console.log('🚀 Requesting account list from Deriv Trading API...');
+    
+    // Fetch both demo and live accounts
     const accountsResponse = await makeDerivRequest({
-      account_list: 1
+      get_accounts: 1
     }, token);
 
-    console.log('✅ Account list received:', accountsResponse.account_list?.length || 0, 'accounts');
+    console.log('✅ Account list received:', accountsResponse.get_accounts?.length || 0, 'accounts');
 
     if (accountsResponse.error) {
       console.error('❌ Deriv API Error:', accountsResponse.error.message);
@@ -119,7 +128,22 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('✅ Accounts fetched successfully!');
+    // Format accounts for frontend
+    const formattedAccounts = [];
+    if (accountsResponse.get_accounts) {
+      accountsResponse.get_accounts.forEach(account => {
+        formattedAccounts.push({
+          loginid: account.loginid,
+          account_type: account.account_type || 'demo',
+          currency: account.currency,
+          is_virtual: account.is_virtual === 1,
+          balance: account.balance || 0
+        });
+      });
+    }
+
+    console.log('✅ Accounts formatted successfully!', formattedAccounts.length, 'accounts ready for display');
+    
     return {
       statusCode: 200,
       headers: {
@@ -128,7 +152,7 @@ exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         success: true,
-        account_list: accountsResponse.account_list || []
+        account_list: formattedAccounts
       })
     };
   } catch (error) {
