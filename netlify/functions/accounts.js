@@ -1,65 +1,3 @@
-const https = require('https');
-
-function makeDerivRequest(payload, token) {
-  return new Promise((resolve, reject) => {
-    const postData = JSON.stringify(payload);
-    
-    const options = {
-      hostname: 'api.deriv.com',
-      port: 443,
-      path: '/api/v3',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData),
-        'Authorization': `Bearer ${token}`,
-        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90'
-      }
-    };
-
-    console.log('🔌 Connecting to Deriv API...');
-    console.log('Hostname:', options.hostname);
-    console.log('Path:', options.path);
-    console.log('Method:', options.method);
-    
-    const req = https.request(options, (res) => {
-      console.log('📨 Response status:', res.statusCode);
-      console.log('Upstream status:', res.statusCode);
-      console.log('Upstream content type:', res.headers['content-type']);
-      console.log('Redirect location:', res.headers['location']);
-      
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          console.log('✅ Valid JSON received');
-          resolve(parsed);
-        } catch (e) {
-          console.error('❌ JSON Parse Error:', e.message);
-          console.error('Raw response:', data.substring(0, 500));
-          reject(new Error(`Invalid JSON from Deriv: ${data.substring(0, 100)}`));
-        }
-      });
-    });
-
-    req.on('error', (err) => {
-      console.error('❌ Request Error:', err.message);
-      reject(err);
-    });
-
-    req.on('timeout', () => {
-      console.error('❌ Request Timeout');
-      req.destroy();
-      reject(new Error('Deriv API timeout'));
-    });
-    
-    req.setTimeout(30000);
-    req.write(postData);
-    req.end();
-  });
-}
-
 exports.handler = async (event, context) => {
   console.log('=== ACCOUNTS FUNCTION START ===');
 
@@ -112,26 +50,72 @@ exports.handler = async (event, context) => {
 
     console.log('🚀 Requesting account list from Deriv API...');
     
-    // Fetch both demo and live accounts using standard API
-    const accountsResponse = await makeDerivRequest({
-      account_list: 1
-    }, token);
+    // Build the request URL and options
+    const accountsUrl = 'https://api.deriv.com/api/v3';
+    const fetchOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90'
+      },
+      body: JSON.stringify({ account_list: 1 })
+    };
 
-    console.log('✅ Account list received:', accountsResponse.account_list?.length || 0, 'accounts');
-
-    if (accountsResponse.error) {
-      console.error('❌ Deriv API Error:', accountsResponse.error.message);
+    console.log('📍 Accounts endpoint:', accountsUrl);
+    console.log('📌 Request method: POST');
+    
+    const response = await fetch(accountsUrl, fetchOptions);
+    
+    console.log('Upstream status:', response.status);
+    console.log('Upstream content type:', response.headers.get('content-type'));
+    
+    const responseText = await response.text();
+    console.log('📄 Response length:', responseText.length);
+    
+    // Try to parse JSON
+    let accountsData;
+    try {
+      accountsData = JSON.parse(responseText);
+      console.log('✅ Valid JSON received from Deriv');
+    } catch (e) {
+      console.error('❌ JSON Parse Error:', e.message);
+      console.error('Raw response:', responseText.substring(0, 500));
       return {
-        statusCode: 401,
+        statusCode: 502,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: false, error: accountsResponse.error.message })
+        body: JSON.stringify({ success: false, error: `Invalid JSON response: ${e.message}` })
+      };
+    }
+
+    // Check for API errors
+    if (accountsData.error) {
+      console.error('❌ Deriv API Error:', accountsData.error.message);
+      return {
+        statusCode: response.status,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: accountsData.error.message })
+      };
+    }
+
+    // Check response status
+    if (!response.ok) {
+      console.error('❌ Non-200 response:', response.status);
+      return {
+        statusCode: response.status,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          success: false, 
+          error: `Deriv API returned status ${response.status}`,
+          details: accountsData
+        })
       };
     }
 
     // Format accounts for frontend
     const formattedAccounts = [];
-    if (accountsResponse.account_list) {
-      accountsResponse.account_list.forEach(account => {
+    if (accountsData.account_list && Array.isArray(accountsData.account_list)) {
+      accountsData.account_list.forEach(account => {
         formattedAccounts.push({
           loginid: account.loginid,
           account_type: account.account_type || 'demo',
