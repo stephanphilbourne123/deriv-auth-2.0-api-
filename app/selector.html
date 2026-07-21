@@ -92,10 +92,6 @@
       background: rgba(34, 224, 138, 0.15);
       box-shadow: 0 0 18px rgba(34, 224, 138, 0.3);
     }
-    .account-item.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
     .account-icon {
       width: 40px;
       height: 40px;
@@ -184,15 +180,6 @@
       margin-bottom: 16px;
       font-size: 13px;
     }
-    .demo-only-badge {
-      background: rgba(251, 113, 133, 0.2);
-      color: #ff6b9d;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      margin-left: 6px;
-    }
   </style>
 </head>
 <body>
@@ -235,15 +222,7 @@
 
     function clearDerivSession() {
       token = null;
-
-      const keys = [
-        'deriv_token',
-        'deriv_user_id',
-        'selected_account',
-        'access_token',
-        'oauth_token'
-      ];
-
+      const keys = ['deriv_token', 'deriv_user_id', 'selected_account', 'deriv_selected_account', 'deriv_connected'];
       keys.forEach(key => {
         sessionStorage.removeItem(key);
         localStorage.removeItem(key);
@@ -252,30 +231,21 @@
 
     async function readJsonResponse(response) {
       const responseText = await response.text();
-
       try {
         return responseText ? JSON.parse(responseText) : {};
       } catch {
-        return {
-          success: false,
-          error: `Server returned an invalid response (${response.status})`
-        };
+        return { success: false, error: `Server returned an invalid response (${response.status})` };
       }
     }
 
     async function handleExpiredToken(message) {
       clearDerivSession();
-
       const errorMsg = document.getElementById('errorMsg');
       const accountsList = document.getElementById('accountsList');
-
       errorMsg.style.display = 'block';
       errorMsg.textContent = `❌ ${message || 'Your Deriv session is invalid or expired. Please connect again.'}`;
       accountsList.innerHTML = '';
-
-      setTimeout(() => {
-        window.location.replace('/');
-      }, 1800);
+      setTimeout(() => { window.location.replace('/'); }, 1800);
     }
 
     async function loadAccounts() {
@@ -308,9 +278,7 @@
         console.log('✅ Auth response status:', authResponse.status);
 
         if (authResponse.status === 401 || authResponse.status === 403) {
-          await handleExpiredToken(
-            authData.error || 'Your Deriv token is invalid, expired, or does not have permission.'
-          );
+          await handleExpiredToken(authData.error || 'Your Deriv token is invalid, expired, or does not have permission.');
           return;
         }
 
@@ -335,9 +303,7 @@
           console.log('✅ Accounts response:', accountsData);
           
           if (accountsResponse.status === 401 || accountsResponse.status === 403) {
-            await handleExpiredToken(
-              accountsData.error || 'Your Deriv session has expired.'
-            );
+            await handleExpiredToken(accountsData.error || 'Your Deriv session has expired.');
             return;
           }
           
@@ -348,11 +314,6 @@
           if (accountsData.account_list && Array.isArray(accountsData.account_list)) {
             accounts = accountsData.account_list;
             console.log('📈 Found', accounts.length, 'accounts');
-            console.log('💰 Balances from accounts endpoint:', accounts.map(a => ({
-              loginid: a.loginid,
-              balance: a.balance,
-              currency: a.currency
-            })));
             
             if (accounts.length === 0) {
               errorMsg.style.display = 'block';
@@ -404,10 +365,7 @@
           : `${account.currency || 'USD'} 0.00`;
         
         item.className = 'account-item';
-        
-        item.onclick = () => {
-          selectAccount(account, item);
-        };
+        item.onclick = () => { selectAccount(account, item); };
         
         item.innerHTML = `
           <div style="display: flex; align-items: center; flex: 1;">
@@ -438,6 +396,25 @@
       document.getElementById('continueBtn').disabled = false;
     }
 
+    function goToDashboard(selectedAccount) {
+      const accountId = selectedAccount.account_id || selectedAccount.loginid || '';
+      
+      const accountData = {
+        account_id: accountId,
+        account_type: selectedAccount.account_type || (selectedAccount.is_virtual ? 'demo' : 'real'),
+        currency: selectedAccount.currency || 'USD',
+        balance: Number(selectedAccount.balance || 0)
+      };
+
+      sessionStorage.setItem('deriv_selected_account', JSON.stringify(accountData));
+      sessionStorage.setItem('deriv_connected', 'true');
+
+      console.log('✅ Account data saved:', accountData);
+      console.log('🚀 Redirecting to dashboard...');
+      
+      window.location.replace('/');
+    }
+
     async function continueToApp() {
       if (!selectedAccount || !token) return;
       const continueBtn = document.getElementById('continueBtn');
@@ -445,18 +422,11 @@
       continueBtn.innerHTML = '<div class="spinner"></div> Loading dashboard...';
       
       try {
-        const accountData = {
-          ...selectedAccount,
-          balance: selectedAccount.balance
-        };
-        sessionStorage.setItem('selected_account', JSON.stringify(accountData));
         sessionStorage.setItem('deriv_token', token);
-        console.log('✅ Account data saved:', accountData);
-        console.log('✅ Token saved:', !!token);
-        console.log('🚀 Redirecting to dashboard...');
+        console.log('✅ Token saved to sessionStorage');
         
         await new Promise(resolve => setTimeout(resolve, 500));
-        window.location.href = '/app/';
+        goToDashboard(selectedAccount);
       } catch (error) {
         console.error('❌ Error:', error);
         continueBtn.disabled = false;
