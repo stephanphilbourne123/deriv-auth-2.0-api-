@@ -361,7 +361,6 @@
               return;
             }
             
-            // ✅ FIXED: Use balance from accounts response directly (Option 2)
             displayAccounts(accounts);
           } else {
             throw new Error('No account list returned');
@@ -400,14 +399,12 @@
         const badgeClass = isDemo ? 'badge-demo' : 'badge-live';
         const icon = isDemo ? '🧪' : '💰';
         
-        // ✅ FIXED: Use balance from account object directly (no separate balance fetch)
         const balanceAmount = account.balance !== undefined && account.balance !== null
           ? `${account.currency || 'USD'} ${parseFloat(account.balance).toFixed(2)}`
           : `${account.currency || 'USD'} 0.00`;
         
         item.className = 'account-item';
         
-        // ✅ Live accounts now ENABLED (no longer disabled)
         item.onclick = () => {
           selectAccount(account, item);
         };
@@ -454,11 +451,12 @@
         };
         sessionStorage.setItem('selected_account', JSON.stringify(accountData));
         sessionStorage.setItem('deriv_token', token);
-        console.log('✅ Saved to sessionStorage:', accountData);
-        console.log('🔑 Token saved:', !!token);
+        console.log('✅ Account data saved:', accountData);
+        console.log('✅ Token saved:', !!token);
+        console.log('🚀 Redirecting to dashboard...');
         
         await new Promise(resolve => setTimeout(resolve, 500));
-        window.location.href = '/app/?account=' + selectedAccount.loginid;
+        window.location.href = '/app/';
       } catch (error) {
         console.error('❌ Error:', error);
         continueBtn.disabled = false;
