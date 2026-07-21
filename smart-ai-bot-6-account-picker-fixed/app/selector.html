@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mickey Smart AI — Account Selector</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: Inter, system-ui, Segoe UI, Roboto, sans-serif;
+      color: #ffffff;
+      background: linear-gradient(135deg, #00c6ff, #0072ff, #6a11cb);
+      background-size: 260% 260%;
+      animation: bgShift 18s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    @keyframes bgShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .account-selector {
+      width: min(600px, 100%);
+      background: rgba(15, 28, 63, 0.95);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 22px 55px rgba(0, 0, 0, 0.8);
+    }
+    .selector-head {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .selector-icon { font-size: 32px; }
+    .selector-title { font-size: 24px; font-weight: 800; }
+    .selector-sub { font-size: 14px; color: #bcdcff; margin-bottom: 20px; }
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .filter-tab {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: #bcdcff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    .filter-tab.active {
+      background: linear-gradient(90deg, #00e0ff, #3a7bff);
+      border-color: rgba(0, 224, 255, 0.5);
+      color: #ffffff;
+    }
+    .filter-tab:hover { border-color: rgba(0, 224, 255, 0.5); }
+    .accounts-list {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .account-item {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .account-item:hover {
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(0, 198, 255, 0.5);
+      box-shadow: 0 0 18px rgba(0, 198, 255, 0.2);
+    }
+    .account-item.selected {
+      border-color: rgba(34, 224, 138, 0.95);
+      background: rgba(34, 224, 138, 0.15);
+      box-shadow: 0 0 18px rgba(34, 224, 138, 0.3);
+    }
+    .account-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(0, 224, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .account-info { text-align: left; flex: 1; }
+    .account-id { font-weight: 700; font-size: 16px; }
+    .account-type {
+      font-size: 12px;
+      color: #bcdcff;
+      margin-top: 4px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .account-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .badge-demo { background: rgba(100, 150, 255, 0.3); color: #64d4ff; }
+    .badge-live { background: rgba(34, 224, 138, 0.3); color: #22e08a; }
+    .account-balance {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .balance-amount { font-size: 16px; font-weight: 700; color: #22e08a; }
+    .arrow { font-size: 18px; color: rgba(255, 255, 255, 0.5); margin-left: 10px; }
+    .selector-action { display: flex; gap: 10px; }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .btn.confirm {
+      background: linear-gradient(90deg, #22e08a, #0bbf56);
+      color: #06130b;
+    }
+    .btn.confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.cancel {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 198, 255, 0.2);
+      border-top-color: #00c6ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error {
+      background: rgba(255, 77, 109, 0.1);
+      border: 1px solid rgba(255, 77, 109, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      color: #ff6b9d;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="account-selector" id="accountSelector">
+    <div class="selector-head">
+      <div class="selector-icon">✓</div>
+      <div class="selector-title">Authentication Successful</div>
+    </div>
+    <div class="selector-sub">Select Demo or Live account to start trading</div>
+    <div id="errorMsg" class="error" style="display: none;"></div>
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="all">All Accounts</button>
+      <button class="filter-tab" data-filter="demo">Demo</button>
+      <button class="filter-tab" data-filter="live">Live</button>
+    </div>
+    <div class="accounts-list" id="accountsList">
+      <div class="loading"><div class="spinner"></div>Loading accounts...</div>
+    </div>
+    <div class="selector-action">
+      <button class="btn confirm" id="continueBtn" disabled>Continue</button>
+      <button class="btn cancel" onclick="logout()">Back</button>
+    </div>
+  </div>
+
+  <script>
+    let selectedAccount = null;
+    let token = null;
+    let allAccounts = [];
+    let currentFilter = 'all';
+
+    async function loadAccounts() {
+      try {
+        token = sessionStorage.getItem('deriv_token');
+
+        if (!token) {
+          showError('No authentication token found. Please log in again.');
+          return;
+        }
+
+        const response = await fetch('https://api.deriv.com/api/v3?action=landing_company&get_account_status=1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const data = await response.json();
+
+        if (data.landing_company) {
+          // Demo example
+          allAccounts = [
+            {
+              loginid: 'DEMO123456789',
+              account_id: 'DEMO123456789',
+              account_type: 'demo',
+              is_virtual: true,
+              currency: 'USD',
+              balance: 10000
+            },
+            {
+              loginid: 'LIVE987654321',
+              account_id: 'LIVE987654321',
+              account_type: 'real',
+              is_virtual: false,
+              currency: 'USD',
+              balance: 5000
+            }
+          ];
+        }
+
+        renderAccountsList();
+      } catch (error) {
+        console.error('Error loading accounts:', error);
+        showError('Could not load accounts. Please try again.');
+      }
+    }
+
+    function showError(message) {
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = message;
+      errorMsg.style.display = 'block';
+    }
+
+    function clearDerivSession() {
+      const keys = ['deriv_token', 'deriv_user_id', 'selected_account', 'deriv_selected_account', 'access_token', 'oauth_token', 'deriv_pkce_verifier', 'deriv_oauth_state'];
+      keys.forEach(key => {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+      });
+    }
+
+    function renderAccountsList() {
+      const accountsList = document.getElementById('accountsList');
+      let filteredAccounts = allAccounts;
+
+      if (currentFilter !== 'all') {
+        filteredAccounts = allAccounts.filter(account => {
+          const isDemo = account.account_type === 'demo' || account.is_virtual;
+          return (currentFilter === 'demo') === isDemo;
+        });
+      }
+
+      if (filteredAccounts.length === 0) {
+        accountsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #bcdcff;">No accounts found for this filter.</div>';
+        return;
+      }
+
+      accountsList.innerHTML = '';
+      filteredAccounts.forEach((account) => {
+        const item = document.createElement('div');
+        const isDemo = account.account_type === 'demo' || account.is_virtual;
+        const type = isDemo ? 'DEMO' : 'LIVE';
+        const badgeClass = isDemo ? 'badge-demo' : 'badge-live';
+        const icon = isDemo ? '🧪' : '💰';
+
+        const balanceAmount = account.balance !== undefined && account.balance !== null
+          ? `${account.currency || 'USD'} ${parseFloat(account.balance).toFixed(2)}`
+          : `${account.currency || 'USD'} 0.00`;
+
+        item.className = 'account-item';
+        item.onclick = () => { selectAccount(account, item); };
+
+        item.innerHTML = `
+          <div style="display: flex; align-items: center; flex: 1;">
+            <div class="account-icon">${icon}</div>
+            <div class="account-info">
+              <div class="account-id">${account.loginid}</div>
+              <div class="account-type">
+                <span class="account-badge ${badgeClass}">${type}</span>
+                <span>${account.currency}</span>
+              </div>
+            </div>
+          </div>
+          <div class="account-balance">
+            <div class="balance-amount">${balanceAmount}</div>
+          </div>
+          <div class="arrow">→</div>
+        `;
+        accountsList.appendChild(item);
+      });
+    }
+
+    function selectAccount(account, element) {
+      document.querySelectorAll('.account-item').forEach(el => {
+        el.classList.remove('selected');
+      });
+      element.classList.add('selected');
+      selectedAccount = account;
+      document.getElementById('continueBtn').disabled = false;
+    }
+
+    function goToDashboard(selectedAccount) {
+      const accountId = selectedAccount.account_id || selectedAccount.loginid || '';
+
+      const accountData = {
+        account_id: accountId,
+        account_type: selectedAccount.account_type || (selectedAccount.is_virtual ? 'demo' : 'real'),
+        currency: selectedAccount.currency || 'USD',
+        balance: Number(selectedAccount.balance || 0)
+      };
+
+      sessionStorage.setItem('deriv_selected_account', JSON.stringify(accountData));
+      sessionStorage.setItem('deriv_connected', 'true');
+
+      console.log('✅ Account data saved:', accountData);
+      console.log('🚀 Redirecting to dashboard...');
+
+      window.location.replace('./index.html');
+    }
+
+    async function continueToApp() {
+      if (!selectedAccount || !token) return;
+      const continueBtn = document.getElementById('continueBtn');
+      continueBtn.disabled = true;
+      continueBtn.innerHTML = '<div class="spinner"></div> Loading dashboard...';
+
+      try {
+        sessionStorage.setItem('deriv_token', token);
+        console.log('✅ Token saved to sessionStorage');
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+        goToDashboard(selectedAccount);
+      } catch (error) {
+        console.error('❌ Error:', error);
+        continueBtn.disabled = false;
+        continueBtn.textContent = 'Continue';
+      }
+    }
+
+    function logout() {
+      clearDerivSession();
+      window.location.replace('../');
+    }
+
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.dataset.filter;
+        renderAccountsList();
+      });
+    });
+
+    document.getElementById('continueBtn').onclick = continueToApp;
+    window.addEventListener('load', loadAccounts);
+  </script>
+</body>
+</html>
