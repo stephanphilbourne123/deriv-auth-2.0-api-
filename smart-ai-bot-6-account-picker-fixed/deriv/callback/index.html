@@ -22,7 +22,7 @@
     <div class="xmark">✕</div>
     <h3 style="margin:0">Could not connect</h3>
     <div class="sub" id="error-text">Deriv did not return an authorization code.</div>
-    <button class="btn" onclick="location.href='/smart-ai-bot-6-account-picker-fixed/'">Back to Login</button>
+    <button class="btn" onclick="location.href='../smart-ai-bot-6-account-picker-fixed/'">Back to Login</button>
   </div>
 
   <div class="state-block" id="state-success">
@@ -47,7 +47,7 @@
   }
 
   var params = new URLSearchParams(window.location.search || '');
-  var SELECTOR_URI = window.location.origin + '/app/selector.html';
+  var SELECTOR_URI = window.location.origin + '/smart-ai-bot-6-account-picker-fixed/app/selector.html';
 
   console.log('🔄 Deriv OAuth Callback Handler');
   console.log('Current URL:', window.location.href.substring(0, 100) + '...');
