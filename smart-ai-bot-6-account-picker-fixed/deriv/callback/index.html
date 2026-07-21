@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Mickey Smart AI — Connect Deriv Account</title>
 <style>
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#020b16;color:#f8fbff;overflow:hidden}.top{height:64px;background:rgba(6,22,41,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(120,200,255,.22);padding:0 18px;display:flex;align-items:center;gap:12px}.logo{font-size:20px}.brand{display:flex;align-items:center;gap:10px;font-weight:700}.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}.card{border-radius:18px;border:1px solid rgba(250,250,250,.08);background:linear-gradient(180deg,rgba(10,18,34,.72),rgba(10,22,46,.68));backdrop-filter:blur(16px);padding:40px;width:min(500px,95vw);text-align:center;box-shadow:0 22px 45px rgba(0,0,0,.05)}.grid{position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:repeating-linear-gradient(0deg,transparent,transparent 35px,rgba(56,189,248,.1) 35px,rgba(56,189,248,.1) 70px);animation:drift 20s linear infinite;pointer-events:none}.inner{position:relative;z-index:1}.state-block{display:none}.state-block.show{display:block;animation:fadeInUp .6s ease}.spinner{width:50px;height:50px;border:3px solid rgba(56,189,248,.2);border-top-color:#38bdf8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes drift{from{transform:translate(0,0)}to{transform:translate(50px,50px)}}.state-block h2{font-size:20px;margin:0 0 8px;font-weight:700}.state-block .sub{font-size:13px;color:rgba(235,245,255,.78);margin-bottom:20px}.check{font-size:50px;animation:pop .6s cubic-bezier(.68,-.55,.265,1.55)}.xmark{font-size:50px;color:#ff6b6b;margin-bottom:12px}@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}.btn{border:none;border-radius:999px;padding:12px 24px;background:linear-gradient(90deg,#38bdf8,#0bbf56);color:#fff;font-weight:600;cursor:pointer;font-size:14px;margin-top:16px;box-shadow:0 10px 24px rgba(0,0,0,.7)}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#020b16;color:#f8fbff;overflow:hidden}.top{height:64px;background:linear-gradient(90deg,rgba(6,22,41,0.96),rgba(8,32,66,0.92));backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;padding:0 24px}.brand{display:flex;align-items:center;gap:12px;font-weight:700}.brand .logo{font-size:24px}.stage{display:flex;align-items:center;justify-content:center;flex:1}.card{width:min(380px,90%);background:linear-gradient(180deg,rgba(15,28,63,0.95),rgba(8,20,44,0.90));backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:40px 32px;text-align:center;box-shadow:0 24px 48px rgba(0,0,0,0.6)}.grid{position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 1px);background-size:40px 40px;border-radius:20px;opacity:0.3;pointer-events:none}.inner{position:relative;z-index:1}.state-block{display:none}.state-block.show{display:block}.spinner{width:40px;height:40px;margin:0 auto 16px;border:3px solid rgba(56,189,248,0.2);border-top-color:#38bdf8;border-radius:50%;animation:spin 1.2s linear infinite}.check{font-size:48px;margin:0 auto 16px}.xmark{font-size:48px;color:#ff6b9d;margin:0 auto 16px}@keyframes spin{to{transform:rotate(360deg)}}h2{font-size:18px;font-weight:700;margin:0 0 8px}h3{font-size:20px;font-weight:700;margin:0 0 8px}.sub{font-size:13px;color:rgba(235,245,255,0.7);margin:0 0 20px}.btn{padding:12px 24px;border:none;border-radius:10px;background:linear-gradient(90deg,#22e08a,#0bbf56);color:#06130b;font-weight:700;font-size:14px;cursor:pointer;transition:0.2s}
 </style>
 </head>
 <body>
@@ -28,7 +28,7 @@
   <div class="state-block" id="state-success">
     <div class="check">✓</div>
     <h3 style="margin:0">Connected!</h3>
-    <div class="sub">Taking you to dashboard...</div>
+    <div class="sub">Taking you to account selector...</div>
   </div>
 
 </div></section></main>
@@ -47,7 +47,7 @@
   }
 
   var params = new URLSearchParams(window.location.search || '');
-  var DASHBOARD_URI = window.location.origin + '/smart-ai-bot-6-account-picker-fixed/app/index.html';
+  var SELECTOR_URI = window.location.origin + '/app/selector.html';
 
   console.log('🔄 Deriv OAuth Callback Handler');
   console.log('Current URL:', window.location.href.substring(0, 100) + '...');
@@ -140,8 +140,8 @@
 
       show('state-success');
       setTimeout(function(){
-        console.log('🚀 Redirecting to dashboard...');
-        window.location.replace(DASHBOARD_URI);
+        console.log('🚀 Redirecting to account selector...');
+        window.location.replace(SELECTOR_URI);
       }, 800);
     })
     .catch(function(err){
