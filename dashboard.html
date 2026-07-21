@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mickey Smart AI — Dashboard</title>
+
+<style>
+:root{
+  --bg-1:#061629;
+  --bg-2:#0a3d91;
+  --bg-3:#6a11cb;
+  --card:rgba(10, 18, 34, 0.72);
+  --card-2:rgba(10, 22, 46, 0.68);
+  --text:#f7fbff;
+  --muted:rgba(235,245,255,0.78);
+  --accent:#38bdf8;
+  --good:#22c55e;
+  --bad:#fb7185;
+  --border:rgba(120, 200, 255, 0.22);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,0.22), transparent 52%),
+    radial-gradient(circle at 88% 78%, rgba(255,255,255,0.16), transparent 55%),
+    radial-gradient(circle at 30% 85%, rgba(56,189,248,0.35), transparent 60%),
+    radial-gradient(circle at 85% 25%, rgba(106,17,203,0.28), transparent 62%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+  position:relative;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+.app{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  grid-template-rows:auto 1fr;
+  min-height:100vh;
+}
+
+.account-panel{
+  background:linear-gradient(180deg, rgba(34,197,94,0.12), rgba(56,189,248,0.08));
+  border-bottom:1px solid rgba(56,189,248,0.22);
+  padding:14px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  grid-column:1/-1;
+}
+.account-info-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.account-icon-box{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  background:rgba(56,189,248,0.20);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+}
+.account-details h3{
+  margin:0;
+  font-size:14px;
+  font-weight:700;
+}
+.account-details p{
+  margin:2px 0 0 0;
+  font-size:12px;
+  color:var(--muted);
+}
+.account-balance{
+  display:flex;
+  gap:16px;
+  align-items:center;
+}
+.balance-item{
+  text-align:right;
+}
+.balance-label{
+  font-size:11px;
+  color:var(--muted);
+  display:block;
+}
+.balance-value{
+  font-size:18px;
+  font-weight:700;
+  color:var(--good);
+  margin-top:2px;
+}
+.logout-btn{
+  padding:8px 16px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:600;
+  font-size:12px;
+  transition:0.2s ease;
+}
+.logout-btn:hover{
+  background:rgba(255,255,255,0.10);
+}
+
+.sidebar{
+  background:linear-gradient(180deg, rgba(6, 22, 41, 0.92), rgba(8, 32, 66, 0.92));
+  backdrop-filter: blur(14px);
+  border-right:1px solid var(--border);
+  padding:20px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow:auto;
+  grid-row:2;
+  grid-column:1;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+}
+.brand .dot{
+  width:10px;height:10px;
+  border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 18px var(--accent);
+}
+.brand h1{
+  font-size:16px;
+  margin:0;
+  font-weight:700;
+  letter-spacing:.3px;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:12px;
+}
+.nav button{
+  text-align:left;
+  padding:12px 14px;
+  border-radius:10px;
+  background:rgba(24,6,15,0.9);
+  border:1px solid rgba(250,250,250,0.05);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:600;
+}
+.nav button.active{
+  outline:2px solid var(--accent);
+  background:linear-gradient(180deg, rgba(36,7,17,0.95), rgba(45,9,22,0.95));
+}
+
+main{
+  padding:24px;
+  grid-row:2;
+  grid-column:2;
+  overflow-y:auto;
+}
+.panel{display:none}
+.panel.active{display:block;animation:fade .18s ease-in}
+@keyframes fade{
+  from{opacity:0;transform:translateY(4px)}
+  to{opacity:1;transform:none}
+}
+
+.card{
+  background:linear-gradient(180deg,var(--card),var(--card-2));
+  backdrop-filter: blur(16px);
+  border:1px solid rgba(250,250,250,0.08);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:18px;
+  box-shadow:0 22px 45px rgba(0,0,0,05);
+}
+
+.card h2{
+  margin:0 0 12px 0;
+  font-size:18px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ACCOUNT PANEL AT TOP (spans full width) -->
+  <div class="account-panel" id="accountPanel">
+    <div class="account-info-left">
+      <div class="account-icon-box">💰</div>
+      <div class="account-details">
+        <h3 id="accountId">Loading...</h3>
+        <p id="accountType">Demo Account</p>
+      </div>
+    </div>
+    <div class="account-balance">
+      <div class="balance-item">
+        <span class="balance-label">Balance</span>
+        <span class="balance-value" id="accountBalance">$0.00</span>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logoutUser()">Logout</button>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand"><span class="dot"></span><h1>Mickey Smart AI</h1></div>
+    <div class="nav">
+      <button class="nav-btn active" data-panel="parity">Trade History</button>
+      <button class="nav-btn" data-panel="account">Account Management</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div id="parity" class="panel active">
+      <div class="card">
+        <h2>🎯 Trade History</h2>
+        <p>Your trading content here</p>
+      </div>
+    </div>
+
+    <div id="account" class="panel">
+      <div class="card">
+        <h2>🔗 Account Management</h2>
+        <p>Admin panel content here</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ✅ CHECK IF LOGGED IN - if not, redirect to login page
+function checkLoginStatus() {
+  const token = sessionStorage.getItem('deriv_token');
+  const accountData = sessionStorage.getItem('selected_account');
+
+  if (!token || !accountData) {
+    console.warn('❌ Not logged in - redirecting to login page');
+    window.location.replace('/');
+    return false;
+  }
+  return true;
+}
+
+// ✅ LOAD ACCOUNT DATA FROM sessionStorage
+function loadAccountData() {
+  try {
+    const accountData = JSON.parse(sessionStorage.getItem('selected_account') || '{}');
+    
+    if (!accountData || !accountData.loginid) {
+      console.warn('❌ No account data found');
+      checkLoginStatus();
+      return;
+    }
+
+    const isDemo = accountData.account_type === 'demo' || accountData.is_virtual;
+    const type = isDemo ? 'Demo' : 'Live';
+    const icon = isDemo ? '🧪' : '💰';
+    const balance = accountData.balance !== undefined ? parseFloat(accountData.balance).toFixed(2) : '0.00';
+    const currency = accountData.currency || 'USD';
+
+    document.getElementById('accountId').textContent = accountData.loginid;
+    document.getElementById('accountType').textContent = `${type} Account • ${currency}`;
+    document.getElementById('accountBalance').textContent = `${currency} ${balance}`;
+    document.querySelector('.account-icon-box').textContent = icon;
+    
+    console.log('✅ Dashboard loaded:', { loginid: accountData.loginid, balance: balance, type: type });
+  } catch (error) {
+    console.error('❌ Error loading account:', error);
+    checkLoginStatus();
+  }
+}
+
+// ✅ LOGOUT FUNCTION
+function logoutUser() {
+  const keys = ['deriv_token', 'deriv_user_id', 'selected_account', 'access_token', 'oauth_token'];
+  keys.forEach(key => {
+    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
+  });
+  console.log('✅ Logged out - redirecting to login page');
+  window.location.replace('/');
+}
+
+// ✅ PANEL NAVIGATION
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(this.dataset.panel).classList.add('active');
+  });
+});
+
+// ✅ INIT ON PAGE LOAD
+window.addEventListener('load', function() {
+  if (checkLoginStatus()) {
+    loadAccountData();
+  }
+});
+</script>
+</body>
+</html>
