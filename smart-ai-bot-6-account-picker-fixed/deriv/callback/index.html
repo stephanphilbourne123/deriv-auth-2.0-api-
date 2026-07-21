@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Mickey Smart AI — Connect Deriv Account</title>
 <style>
-*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#020b16;color:#f8fbff;overflow:hidden}.top{height:64px;background:linear-gradient(90deg,rgba(6,22,41,0.92),rgba(8,32,66,0.92));border-bottom:1px solid rgba(120,200,255,0.22);display:flex;align-items:center;padding:0 20px}.brand{display:flex;align-items:center;gap:10px;font-weight:700}.logo{font-size:24px}.stage{height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;position:relative;background:radial-gradient(circle at 0 0,rgba(56,189,248,0.35),transparent 60%),linear-gradient(135deg,#061629,#0a3d91,#6a11cb)}.card{width:min(480px,calc(100% - 40px));background:rgba(10,18,34,0.72);backdrop-filter:blur(16px);border:1px solid rgba(250,250,250,0.08);border-radius:18px;padding:40px;box-shadow:0 22px 45px rgba(0,0,0,0.5)}.grid{position:absolute;inset:0;background:url('data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" stroke="rgba(56,189,248,0.05)" stroke-width="1"%3E%3Cpath d="M0,0 L60,0 M0,0 L0,60"/%3E%3C/g%3E%3C/svg%3E');opacity:0.5}.inner{position:relative;z-index:1}.state-block{display:none;text-align:center}.state-block.show{display:block;animation:fade 0.3s ease-in}.spinner{width:50px;height:50px;margin:0 auto 30px;border:4px solid rgba(56,189,248,0.2);border-top-color:#38bdf8;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}h2,h3{margin:0 0 12px}h2{font-size:24px}h3{font-size:20px}.sub{font-size:14px;color:#a0d0ff;margin-bottom:24px;line-height:1.5}.xmark,.check{font-size:48px;margin-bottom:16px}.xmark{color:#fb7185}.check{color:#22c55e}.btn{width:100%;padding:12px 16px;border:none;border-radius:10px;background:linear-gradient(90deg,#0072ff,#00c6ff);color:white;font-weight:700;cursor:pointer;font-size:14px;margin-top:12px}.btn:hover{opacity:0.9}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#020b16;color:#f8fbff;overflow:hidden}.top{height:64px;background:rgba(15,28,63,.95);border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;padding:0 20px}.brand{display:flex;align-items:center;gap:10px;font-weight:700}.logo{font-size:20px}.stage{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px)}.card{background:rgba(15,28,63,.95);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:50px 30px;text-align:center;width:min(500px,90%)}.grid{position:absolute;inset:0;opacity:.05;background-image:radial-gradient(circle,rgba(255,255,255,.2) 1px,transparent 1px);background-size:50px 50px}.state-block{display:none;animation:fade .3s}.state-block.show{display:block}.spinner{width:50px;height:50px;border:3px solid rgba(0,198,255,.2);border-top-color:#00c6ff;border-radius:50%;margin:20px auto;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fade{from{opacity:0}to{opacity:1}}h2,h3{margin:0;color:#fff}h2{font-size:24px;margin-bottom:10px}.sub{color:#bcdcff;font-size:14px;margin-top:10px}.xmark{font-size:48px;color:#ff6b9d;margin-bottom:15px}.check{font-size:48px;color:#22e08a;margin-bottom:15px}.btn{padding:14px 28px;border:none;border-radius:10px;background:linear-gradient(90deg,#00e0ff,#3a7bff);color:#fff;font-weight:700;cursor:pointer;margin-top:20px}
 </style>
 </head>
 <body>
@@ -14,21 +14,21 @@
 
   <div class="state-block show" id="state-loading">
     <div class="spinner"></div>
-    <h2 style="margin:0 0 4px">Connecting to Deriv</h2>
+    <h2>Connecting to Deriv</h2>
     <div class="sub">Exchanging your authorization code for an access token...</div>
   </div>
 
   <div class="state-block" id="state-error">
     <div class="xmark">✕</div>
-    <h3 style="margin:0">Could not connect</h3>
+    <h3>Could not connect</h3>
     <div class="sub" id="error-text">Deriv did not return an authorization code.</div>
     <button class="btn" onclick="location.href='/'">Back to Login</button>
   </div>
 
   <div class="state-block" id="state-success">
     <div class="check">✓</div>
-    <h3 style="margin:0">Connected!</h3>
-    <div class="sub">Taking you to account selector...</div>
+    <h3>Connected!</h3>
+    <div class="sub">Taking you to dashboard...</div>
   </div>
 
 </div></section></main>
@@ -48,10 +48,6 @@
 
   var params = new URLSearchParams(window.location.search || '');
 
-  console.log('🔄 Deriv OAuth Callback Handler');
-  console.log('Current URL:', window.location.href.substring(0, 100) + '...');
-
-  // Check for Deriv error response
   if (params.get('error')) {
     var errorMsg = 'Deriv said: ' + (params.get('error_description') || params.get('error'));
     fail(errorMsg);
@@ -62,32 +58,23 @@
   var returnedState = params.get('state');
 
   if (!code) {
-    fail('No authorization code returned by Deriv. Check redirect URL configuration at developers.deriv.com matches: ' + window.location.origin + '/deriv/callback');
+    fail('No authorization code returned by Deriv.');
     return;
   }
-
-  console.log('✅ Authorization code received');
-  console.log('Code:', code.substring(0, 15) + '...');
 
   var savedState = sessionStorage.getItem('deriv_oauth_state');
   var codeVerifier = sessionStorage.getItem('deriv_pkce_verifier');
 
-  console.log('State match:', savedState === returnedState);
-  console.log('Code verifier exists:', !!codeVerifier);
-
   if (!codeVerifier) {
-    fail('Missing security code for this login (may be started in different tab/window). Please click "Connect via OAuth" again in this same tab.');
+    fail('Missing security code. Please try connecting again.');
     return;
   }
 
   if (savedState && returnedState && savedState !== returnedState) {
-    fail('Security check failed (state mismatch). Please try connecting again.');
+    fail('Security check failed (state mismatch).');
     return;
   }
 
-  console.log('🚀 Calling Netlify function to exchange code for token...');
-
-  // FIXED: Call our Netlify backend function instead of Deriv directly
   fetch('/.netlify/functions/oauth-token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -98,14 +85,11 @@
     })
   })
     .then(function(resp) {
-      console.log('📨 Response status:', resp.status);
       return resp.json().then(function(json) {
         return { ok: resp.ok, status: resp.status, json: json };
       });
     })
     .then(function(result){
-      console.log('Response received:', result);
-
       if (!result.ok) {
         var desc = (result.json && (result.json.error_description || result.json.message || result.json.error)) || 'Token exchange failed.';
         fail('Server error: ' + desc);
@@ -117,31 +101,22 @@
         return;
       }
 
-      console.log('✅ Token exchange successful!');
-      console.log('Token length:', result.json.access_token.length, 'characters');
-
       try {
-        // Clean up PKCE session storage
         sessionStorage.removeItem('deriv_pkce_verifier');
         sessionStorage.removeItem('deriv_oauth_state');
-
-        // Store token in sessionStorage (not localStorage for security)
         sessionStorage.setItem('deriv_token', result.json.access_token);
         sessionStorage.setItem('deriv_token_type', result.json.token_type || 'Bearer');
         if (result.json.expires_in) {
           sessionStorage.setItem('deriv_token_expires', result.json.expires_in);
         }
-
-        console.log('✅ Token stored in sessionStorage');
       } catch (e) {
-        console.error('❌ Storage error:', e.message);
+        console.error('Storage error:', e.message);
       }
 
       show('state-success');
       setTimeout(function(){
-        console.log('🚀 Redirecting to account selector...');
-        window.location.replace('/app/selector.html');
-      }, 800);
+        window.location.replace('/smart-ai-bot-6-account-picker-fixed/app/index.html');
+      }, 1200);
     })
     .catch(function(err){
       fail('Network error: ' + (err && err.message || err));
