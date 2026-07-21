@@ -50,20 +50,19 @@ exports.handler = async (event, context) => {
 
     console.log('🚀 Requesting account list from Deriv API...');
     
-    // Build the request URL and options
-    const accountsUrl = 'https://api.deriv.com/api/v3';
+    // Use the correct OAuth-compatible REST endpoint
+    const accountsUrl = 'https://api.deriv.com/api/v3/accounts';
     const fetchOptions = {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
         'Deriv-App-ID': '33wk6T0W5ZsXYqjz3eY90'
-      },
-      body: JSON.stringify({ account_list: 1 })
+      }
     };
 
     console.log('📍 Accounts endpoint:', accountsUrl);
-    console.log('📌 Request method: POST');
+    console.log('📌 Request method: GET');
     
     const response = await fetch(accountsUrl, fetchOptions);
     
@@ -90,11 +89,11 @@ exports.handler = async (event, context) => {
 
     // Check for API errors
     if (accountsData.error) {
-      console.error('❌ Deriv API Error:', accountsData.error.message);
+      console.error('❌ Deriv API Error:', accountsData.error);
       return {
         statusCode: response.status,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: false, error: accountsData.error.message })
+        body: JSON.stringify({ success: false, error: accountsData.error })
       };
     }
 
@@ -114,8 +113,18 @@ exports.handler = async (event, context) => {
 
     // Format accounts for frontend
     const formattedAccounts = [];
-    if (accountsData.account_list && Array.isArray(accountsData.account_list)) {
-      accountsData.account_list.forEach(account => {
+    if (Array.isArray(accountsData)) {
+      accountsData.forEach(account => {
+        formattedAccounts.push({
+          loginid: account.loginid,
+          account_type: account.account_type || 'demo',
+          currency: account.currency,
+          is_virtual: account.is_virtual === 1,
+          balance: account.balance || 0
+        });
+      });
+    } else if (accountsData.accounts && Array.isArray(accountsData.accounts)) {
+      accountsData.accounts.forEach(account => {
         formattedAccounts.push({
           loginid: account.loginid,
           account_type: account.account_type || 'demo',
