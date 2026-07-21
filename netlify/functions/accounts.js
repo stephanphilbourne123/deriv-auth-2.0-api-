@@ -5,9 +5,9 @@ function makeDerivRequest(payload, token) {
     const postData = JSON.stringify(payload);
     
     const options = {
-      hostname: 'api.derivws.com',
+      hostname: 'api.deriv.com',
       port: 443,
-      path: '/trading/v1/accounts',
+      path: '/api/v3',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -17,7 +17,7 @@ function makeDerivRequest(payload, token) {
       }
     };
 
-    console.log('🔌 Connecting to Deriv Trading API...');
+    console.log('🔌 Connecting to Deriv API...');
     console.log('Hostname:', options.hostname);
     console.log('Path:', options.path);
     console.log('Method:', options.method);
@@ -110,14 +110,14 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('🚀 Requesting account list from Deriv Trading API...');
+    console.log('🚀 Requesting account list from Deriv API...');
     
-    // Fetch both demo and live accounts
+    // Fetch both demo and live accounts using standard API
     const accountsResponse = await makeDerivRequest({
-      get_accounts: 1
+      account_list: 1
     }, token);
 
-    console.log('✅ Account list received:', accountsResponse.get_accounts?.length || 0, 'accounts');
+    console.log('✅ Account list received:', accountsResponse.account_list?.length || 0, 'accounts');
 
     if (accountsResponse.error) {
       console.error('❌ Deriv API Error:', accountsResponse.error.message);
@@ -130,8 +130,8 @@ exports.handler = async (event, context) => {
 
     // Format accounts for frontend
     const formattedAccounts = [];
-    if (accountsResponse.get_accounts) {
-      accountsResponse.get_accounts.forEach(account => {
+    if (accountsResponse.account_list) {
+      accountsResponse.account_list.forEach(account => {
         formattedAccounts.push({
           loginid: account.loginid,
           account_type: account.account_type || 'demo',
