@@ -64,7 +64,6 @@ exports.handler = async (event, context) => {
 
     console.log('📍 Accounts endpoint:', accountsUrl);
     console.log('📌 Request method: GET');
-    console.log('🔑 App ID source:', process.env.DERIV_APP_ID ? 'environment variable' : 'hardcoded');
     
     const response = await fetch(accountsUrl, fetchOptions);
     
@@ -73,14 +72,12 @@ exports.handler = async (event, context) => {
     
     const responseText = await response.text();
     console.log('📄 Response length:', responseText.length);
-    console.log('📋 RAW RESPONSE (first 1000 chars):', responseText.substring(0, 1000));
     
     // Try to parse JSON
     let accountsData;
     try {
       accountsData = JSON.parse(responseText);
       console.log('✅ Valid JSON received from Deriv');
-      console.log('📊 Response structure:', JSON.stringify(accountsData, null, 2).substring(0, 500));
     } catch (e) {
       console.error('❌ JSON Parse Error:', e.message);
       console.error('Raw response:', responseText.substring(0, 500));
@@ -115,43 +112,41 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Format accounts for frontend
-    const formattedAccounts = [];
-    
     // Handle different response formats from Deriv Options API
-    let accountsList = [];
+    let rawAccounts = [];
     if (Array.isArray(accountsData)) {
-      accountsList = accountsData;
-      console.log('📌 Response is direct array');
+      rawAccounts = accountsData;
     } else if (accountsData.accounts && Array.isArray(accountsData.accounts)) {
-      accountsList = accountsData.accounts;
-      console.log('📌 Response has .accounts property');
+      rawAccounts = accountsData.accounts;
     } else if (accountsData.data && Array.isArray(accountsData.data)) {
-      accountsList = accountsData.data;
-      console.log('📌 Response has .data property');
-    } else {
-      console.warn('⚠️ Unknown response structure. Keys:', Object.keys(accountsData));
+      rawAccounts = accountsData.data;
     }
 
-    console.log('📈 Found', accountsList.length, 'accounts');
+    console.log('📈 Found', rawAccounts.length, 'accounts');
 
-    if (accountsList.length > 0) {
-      console.log('🔍 First account structure:', JSON.stringify(accountsList[0], null, 2));
-    }
+    // Format accounts for frontend using ChatGPT's recommended mapping
+    const formattedAccounts = rawAccounts.map((account) => {
+      const accountId = account.account_id || account.loginid || '';
 
-    accountsList.forEach((account, index) => {
-      const formatted = {
-        loginid: account.loginid || account.id || account.account || 'UNKNOWN',
+      return {
+        // Include both names so older selector code still works
+        account_id: accountId,
+        loginid: accountId,
+
         account_type: account.account_type || 'demo',
+        is_virtual: account.account_type === 'demo' ? 1 : 0,
+
         currency: account.currency || 'USD',
-        is_virtual: account.is_virtual === 1,
-        balance: account.balance || 0
+        balance: Number(account.balance || 0),
+        status: account.status || 'unknown'
+        // NOTE: NOT disabling live accounts - they are fully enabled
       };
-      console.log(`Account ${index + 1}:`, JSON.stringify(formatted));
-      formattedAccounts.push(formatted);
     });
 
     console.log('✅ Accounts formatted successfully!', formattedAccounts.length, 'accounts ready for display');
+    formattedAccounts.forEach((acc, i) => {
+      console.log(`Account ${i + 1}:`, JSON.stringify(acc));
+    });
     
     return {
       statusCode: 200,
