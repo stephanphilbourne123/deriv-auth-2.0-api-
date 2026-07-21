@@ -551,8 +551,8 @@
     }
 
     if (status) status.textContent = "Signed in - redirecting to dashboard...";
-    const appUrl = new URL("/app/", window.location.origin).toString();
-    window.setTimeout(() => window.location.replace(appUrl), 400);
+    const dashboardUrl = new URL("/smart-ai-bot-6-account-picker-fixed/app/", window.location.origin).toString();
+    window.setTimeout(() => window.location.replace(dashboardUrl), 400);
   }
 
   document.addEventListener("DOMContentLoaded", function(){
