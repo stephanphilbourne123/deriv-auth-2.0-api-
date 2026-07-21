@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Mickey Smart AI — Account Dashboard</title>
 <style>
-:root{--bg-1:#061629;--bg-2:#0a3d91;--bg-3:#6a11cb;--card:rgba(10, 18, 34, 0.72);--card-2:rgba(10, 22, 46, 0.68);--text:#f7fbff;--muted:rgba(235,245,255,0.78);--accent:#38bdf8;--good:#22c55e;--bad:#fb7185;--border:rgba(120, 200, 255, 0.22);}
+:root{--bg-1:#061629;--bg-2:#0a3d91;--bg-3:#6a11cb;--card:rgba(10, 18, 34, 0.72);--card-2:rgba(10, 22, 46, 0.68);--text:#f7fbff;--muted:rgba(235,245,255,0.78);--accent:#38bdf8;--good:#22c55e;--bad:#fb7185;--border:rgba(255,255,255,0.08)}
 *{box-sizing:border-box}html,body{height:100%;margin:0}
-body{color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at 12% 18%, rgba(255,255,255,0.22), transparent 52%),radial-gradient(circle at 88% 78%, rgba(255,255,255,0.16), transparent 55%),radial-gradient(circle at 30% 85%, rgba(56,189,248,0.35), transparent 60%),radial-gradient(circle at 85% 25%, rgba(106,17,203,0.28), transparent 62%),linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));overflow-y:auto;overflow-x:hidden;}
+body{color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at 12% 18%, rgba(255,255,255,0.22), transparent 52%),radial-gradient(circle at 88% 7%, rgba(255,213,74,0.15), transparent 50%),linear-gradient(135deg, #061629, #0a3d91, #6a11cb);background-size:300% 300%;animation:bgShift 12s ease-in-out infinite;overflow-x:hidden}
+@keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
-.sidebar{background:linear-gradient(180deg, rgba(6, 22, 41, 0.92), rgba(8, 32, 66, 0.92));backdrop-filter:blur(14px);border-right:1px solid var(--border);padding:20px;position:sticky;top:0;height:100vh;overflow:auto}
+.sidebar{background:linear-gradient(180deg, rgba(6, 22, 41, 0.92), rgba(8, 32, 66, 0.92));backdrop-filter:blur(14px);border-right:1px solid var(--border);padding:20px;position:sticky;top:0;height:100vh;overflow-y:auto}
 .brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
 .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent)}
 .brand h1{font-size:16px;margin:0;font-weight:700}
@@ -165,6 +166,27 @@ function disconnectAccount() {
 window.addEventListener('load', function() {
   console.log('📄 Dashboard loaded');
   loadAccountData();
+});
+</script>
+
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const identity = window.netlifyIdentity;
+
+  if (!identity) {
+    window.location.replace('/');
+    return;
+  }
+
+  identity.on('init', function (user) {
+    if (!user) {
+      window.location.replace('/');
+    }
+  });
+
+  identity.init();
 });
 </script>
 
