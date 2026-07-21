@@ -49,71 +49,200 @@ body {
   overflow: auto;
 }
 
-.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-.brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
-.brand h1 { font-size: 16px; margin: 0; font-weight: 700; letter-spacing: 0.3px; }
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon { font-size: 28px; }
+
+.sidebar-section {
+  margin-bottom: 25px;
+}
+
+.sidebar-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.sidebar-item {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  background: transparent;
+  color: var(--muted);
+}
+
+.sidebar-item:hover {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent);
+}
+
+.sidebar-item.active {
+  background: rgba(56, 189, 248, 0.2);
+  color: var(--accent);
+}
+
+.sidebar-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.sidebar-value {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  gap: 20px;
+}
 
 .card {
-  background: linear-gradient(180deg, var(--card), var(--card-2));
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(250, 250, 250, 0.08);
-  border-radius: 18px;
-  padding: 16px;
-  margin-bottom: 18px;
-  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.05);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
 }
 
-main { padding: 24px; }
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+}
 
-.deriv-card {
-  background: linear-gradient(180deg, rgba(34, 197, 94, 0.15), rgba(56, 189, 248, 0.12));
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  border-radius: 18px;
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.deriv-section {
+  background: var(--card-2);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 14px;
   padding: 20px;
-  margin-bottom: 24px;
-  box-shadow: 0 0 28px rgba(34, 197, 94, 0.25);
+  backdrop-filter: blur(10px);
 }
 
-.deriv-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.deriv-icon { font-size: 28px; }
-.deriv-title { font-size: 18px; font-weight: 700; }
-.deriv-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); font-size: 14px; }
-.deriv-item:last-child { border-bottom: none; }
-.deriv-label { color: var(--muted); }
-.deriv-value { font-weight: 700; color: #22e08a; }
-.deriv-value.disconnected { color: #ff6b9d; }
+.deriv-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
 
-.connected { color: #22e08a !important; }
-.disconnected { color: #ff6b9d !important; }
+.deriv-icon { font-size: 24px; }
+
+.deriv-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.deriv-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(120, 200, 255, 0.1);
+}
+
+.deriv-item:last-child { border-bottom: none; }
+
+.deriv-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.deriv-value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.deriv-value.disconnected {
+  color: var(--bad);
+}
+
+.deriv-value.connected {
+  color: var(--good);
+}
+
+.signin-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--accent), #0bbf56);
+  border: none;
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s ease;
+  margin-top: 16px;
+}
+
+.signin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
+}
+
+.signin-btn:active {
+  transform: translateY(0);
+}
 </style>
 </head>
 <body>
+
 <div class="app">
   <aside class="sidebar">
-    <div class="brand"><span class="dot"></span><h1>Mickey Smart AI</h1></div>
-    
-    <div class="card">
-      <h3 style="margin: 0 0 12px; font-size: 14px;">🔗 Deriv Account</h3>
-      <div style="display: grid; gap: 8px; font-size: 13px;">
-        <div>
-          <div style="color: var(--muted); font-size: 11px; margin-bottom: 2px;">Status</div>
-          <div id="derivConnectionStatus" class="disconnected">Disconnected</div>
-        </div>
-        <div>
-          <div style="color: var(--muted); font-size: 11px; margin-bottom: 2px;">Account</div>
-          <div id="derivAccountId">Account: -</div>
-        </div>
-        <div>
-          <div style="color: var(--muted); font-size: 11px; margin-bottom: 2px;">Balance</div>
-          <div id="derivAccountBalance">Balance: -</div>
-        </div>
+    <div class="logo">
+      <div class="logo-icon">🤖</div>
+      <div>Mickey Smart AI</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">💰 Deriv Account</div>
+      <div class="sidebar-item">
+        <span class="sidebar-label">Status:</span>
+        <span class="sidebar-value" id="derivConnectionStatus">Disconnected</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="sidebar-label">Account ID:</span>
+        <span class="sidebar-value" id="derivAccountId">-</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="sidebar-label">Balance:</span>
+        <span class="sidebar-value" id="derivAccountBalance">-</span>
       </div>
     </div>
   </aside>
 
   <main>
-    <div class="deriv-card">
-      <div class="deriv-header">
+    <div class="card">
+      <h2>🎯 Welcome to Mickey Smart AI</h2>
+      <p>Connect your Deriv account to start trading and manage your portfolio.</p>
+      <button class="signin-btn" onclick="window.location.href='/app/deriv-login.html'">
+        🚀 Sign In with Deriv
+      </button>
+    </div>
+
+    <div class="deriv-section">
+      <div class="deriv-head">
         <div class="deriv-icon">💰</div>
         <div class="deriv-title">Account Dashboard</div>
       </div>
@@ -146,34 +275,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const account = JSON.parse(savedAccount);
     console.log('✅ Account loaded:', account);
 
-    const statusElements = document.querySelectorAll('[id="derivConnectionStatus"], [id="derivConnectionStatus2"]');
-    const accountElements = document.querySelectorAll('[id="derivAccountId"], [id="derivAccountId2"]');
-    const balanceElements = document.querySelectorAll('[id="derivAccountBalance"], [id="derivAccountBalance2"]');
+    const isDemo = account.account_type === 'demo';
+    const statusText = isDemo ? '✓ Connected (Demo)' : '✓ Connected (Live)';
+    const statusClass = isDemo ? 'connected' : 'connected';
+    const balance = account.balance !== undefined ? parseFloat(account.balance).toFixed(2) : '0.00';
 
-    statusElements.forEach(el => {
-      if (el) {
-        const accountType = account.account_type === 'real' ? 'Live' : 'Demo';
-        el.textContent = `Connected — ${accountType}`;
-        el.classList.remove('disconnected');
-        el.classList.add('connected');
-      }
-    });
+    document.getElementById('derivConnectionStatus').textContent = statusText;
+    document.getElementById('derivConnectionStatus2').textContent = statusText;
+    document.getElementById('derivConnectionStatus2').className = `deriv-value ${statusClass}`;
 
-    accountElements.forEach(el => {
-      if (el) {
-        el.textContent = account.account_id || 'Account unavailable';
-      }
-    });
+    document.getElementById('derivAccountId').textContent = account.account_id || account.loginid || '-';
+    document.getElementById('derivAccountId2').textContent = account.account_id || account.loginid || '-';
 
-    balanceElements.forEach(el => {
-      if (el) {
-        const currency = account.currency || 'USD';
-        const balance = Number(account.balance || 0);
-        el.textContent = `${currency} ${balance.toFixed(2)}`;
-      }
-    });
+    document.getElementById('derivAccountBalance').textContent = `${account.currency || 'USD'} ${balance}`;
+    document.getElementById('derivAccountBalance2').textContent = `${account.currency || 'USD'} ${balance}`;
   } catch (error) {
-    console.error('❌ Error loading account:', error);
+    console.error('❌ Error parsing account data:', error);
   }
 });
 </script>
