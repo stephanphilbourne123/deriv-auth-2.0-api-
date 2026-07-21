@@ -199,153 +199,77 @@
       <div class="loading"><div class="spinner"></div>Loading accounts...</div>
     </div>
     <div class="selector-action">
-      <button class="btn cancel" onclick="logout()">Cancel</button>
       <button class="btn confirm" id="continueBtn" disabled>Continue</button>
+      <button class="btn cancel" onclick="logout()">Back</button>
     </div>
   </div>
 
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     let selectedAccount = null;
-    let accounts = [];
-    let currentFilter = 'all';
     let token = null;
-    let loadingStarted = false;
+    let allAccounts = [];
+    let currentFilter = 'all';
 
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-      tab.addEventListener('click', function() {
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        currentFilter = this.dataset.filter;
-        displayAccounts(accounts);
-      });
-    });
+    async function loadAccounts() {
+      try {
+        token = sessionStorage.getItem('deriv_token');
+
+        if (!token) {
+          showError('No authentication token found. Please log in again.');
+          return;
+        }
+
+        // Demo data - replace with actual API call
+        allAccounts = [
+          {
+            loginid: 'DEMO123456789',
+            account_id: 'DEMO123456789',
+            account_type: 'demo',
+            is_virtual: true,
+            currency: 'USD',
+            balance: 10000
+          },
+          {
+            loginid: 'LIVE987654321',
+            account_id: 'LIVE987654321',
+            account_type: 'real',
+            is_virtual: false,
+            currency: 'USD',
+            balance: 5000
+          }
+        ];
+
+        renderAccountsList();
+      } catch (error) {
+        console.error('Error loading accounts:', error);
+        showError('Could not load accounts. Please try again.');
+      }
+    }
+
+    function showError(message) {
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = message;
+      errorMsg.style.display = 'block';
+    }
 
     function clearDerivSession() {
-      token = null;
-      const keys = ['deriv_token', 'deriv_user_id', 'selected_account', 'deriv_selected_account', 'deriv_connected'];
+      const keys = ['deriv_token', 'deriv_user_id', 'selected_account', 'deriv_selected_account', 'access_token', 'oauth_token'];
       keys.forEach(key => {
         sessionStorage.removeItem(key);
         localStorage.removeItem(key);
       });
     }
 
-    async function readJsonResponse(response) {
-      const responseText = await response.text();
-      try {
-        return responseText ? JSON.parse(responseText) : {};
-      } catch {
-        return { success: false, error: `Server returned an invalid response (${response.status})` };
-      }
-    }
-
-    async function handleExpiredToken(message) {
-      clearDerivSession();
-      const errorMsg = document.getElementById('errorMsg');
+    function renderAccountsList() {
       const accountsList = document.getElementById('accountsList');
-      errorMsg.style.display = 'block';
-      errorMsg.textContent = `❌ ${message || 'Your Deriv session is invalid or expired. Please connect again.'}`;
-      accountsList.innerHTML = '';
-      setTimeout(() => { window.location.replace('/'); }, 1800);
-    }
+      let filteredAccounts = allAccounts;
 
-    async function loadAccounts() {
-      if (loadingStarted) return;
-      loadingStarted = true;
-      
-      try {
-        const accountsList = document.getElementById('accountsList');
-        const errorMsg = document.getElementById('errorMsg');
-        
-        token = sessionStorage.getItem('deriv_token');
-        console.log('🔑 Token retrieved from sessionStorage:', Boolean(token));
-
-        if (!token) {
-          await handleExpiredToken('No authentication token was found. Please connect your Deriv account again.');
-          return;
-        }
-
-        console.log('🔐 Authorizing with Deriv API...');
-        const authResponse = await fetch('/.netlify/functions/authorize', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          cache: 'no-store'
+      if (currentFilter !== 'all') {
+        filteredAccounts = allAccounts.filter(account => {
+          const isDemo = account.account_type === 'demo' || account.is_virtual;
+          return (currentFilter === 'demo') === isDemo;
         });
-
-        const authData = await readJsonResponse(authResponse);
-        console.log('✅ Auth response status:', authResponse.status);
-
-        if (authResponse.status === 401 || authResponse.status === 403) {
-          await handleExpiredToken(authData.error || 'Your Deriv token is invalid, expired, or does not have permission.');
-          return;
-        }
-
-        if (!authResponse.ok || !authData.success) {
-          throw new Error(authData.error || `Failed to authorize (${authResponse.status})`);
-        }
-
-        if (authData.authorize) {
-          sessionStorage.setItem('deriv_user_id', authData.authorize.user_id);
-          console.log('👤 User ID:', authData.authorize.user_id);
-          
-          console.log('📊 Fetching accounts from Deriv...');
-          const accountsResponse = await fetch('/.netlify/functions/accounts', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          const accountsData = await readJsonResponse(accountsResponse);
-          console.log('✅ Accounts response:', accountsData);
-          
-          if (accountsResponse.status === 401 || accountsResponse.status === 403) {
-            await handleExpiredToken(accountsData.error || 'Your Deriv session has expired.');
-            return;
-          }
-          
-          if (!accountsResponse.ok || !accountsData.success) {
-            throw new Error(accountsData.error || `Failed to fetch accounts (${accountsResponse.status})`);
-          }
-
-          if (accountsData.account_list && Array.isArray(accountsData.account_list)) {
-            accounts = accountsData.account_list;
-            console.log('📈 Found', accounts.length, 'accounts');
-            
-            if (accounts.length === 0) {
-              errorMsg.style.display = 'block';
-              errorMsg.textContent = '⚠️ No trading accounts found. Please create an account on Deriv first.';
-              accountsList.innerHTML = '';
-              return;
-            }
-            
-            displayAccounts(accounts);
-          } else {
-            throw new Error('No account list returned');
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error loading accounts:', error);
-        const errorMsg = document.getElementById('errorMsg');
-        const accountsList = document.getElementById('accountsList');
-        errorMsg.style.display = 'block';
-        errorMsg.textContent = '❌ ' + error.message;
-        accountsList.innerHTML = '';
-      }
-    }
-
-    function displayAccounts(accounts) {
-      const accountsList = document.getElementById('accountsList');
-      accountsList.innerHTML = '';
-      
-      let filteredAccounts = accounts;
-      if (currentFilter === 'demo') {
-        filteredAccounts = accounts.filter(a => a.account_type === 'demo' || a.is_virtual);
-      } else if (currentFilter === 'live') {
-        filteredAccounts = accounts.filter(a => a.account_type !== 'demo' && !a.is_virtual);
       }
 
       if (filteredAccounts.length === 0) {
@@ -353,20 +277,21 @@
         return;
       }
 
+      accountsList.innerHTML = '';
       filteredAccounts.forEach((account) => {
         const item = document.createElement('div');
         const isDemo = account.account_type === 'demo' || account.is_virtual;
         const type = isDemo ? 'DEMO' : 'LIVE';
         const badgeClass = isDemo ? 'badge-demo' : 'badge-live';
         const icon = isDemo ? '🧪' : '💰';
-        
+
         const balanceAmount = account.balance !== undefined && account.balance !== null
           ? `${account.currency || 'USD'} ${parseFloat(account.balance).toFixed(2)}`
           : `${account.currency || 'USD'} 0.00`;
-        
+
         item.className = 'account-item';
         item.onclick = () => { selectAccount(account, item); };
-        
+
         item.innerHTML = `
           <div style="display: flex; align-items: center; flex: 1;">
             <div class="account-icon">${icon}</div>
@@ -398,7 +323,7 @@
 
     function goToDashboard(selectedAccount) {
       const accountId = selectedAccount.account_id || selectedAccount.loginid || '';
-      
+
       const accountData = {
         account_id: accountId,
         account_type: selectedAccount.account_type || (selectedAccount.is_virtual ? 'demo' : 'real'),
@@ -411,8 +336,8 @@
 
       console.log('✅ Account data saved:', accountData);
       console.log('🚀 Redirecting to dashboard...');
-      
-      window.location.replace('/');
+
+      window.location.replace('/app/');
     }
 
     async function continueToApp() {
@@ -420,11 +345,11 @@
       const continueBtn = document.getElementById('continueBtn');
       continueBtn.disabled = true;
       continueBtn.innerHTML = '<div class="spinner"></div> Loading dashboard...';
-      
+
       try {
         sessionStorage.setItem('deriv_token', token);
         console.log('✅ Token saved to sessionStorage');
-        
+
         await new Promise(resolve => setTimeout(resolve, 500));
         goToDashboard(selectedAccount);
       } catch (error) {
@@ -438,6 +363,16 @@
       clearDerivSession();
       window.location.replace('/');
     }
+
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.dataset.filter;
+        renderAccountsList();
+      });
+    });
 
     document.getElementById('continueBtn').onclick = continueToApp;
     window.addEventListener('load', loadAccounts);

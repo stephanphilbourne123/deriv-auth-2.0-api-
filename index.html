@@ -1,634 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Mickey Smart AI — Login</title>
-<link rel="icon" href="favicon.png">
-
-<style>
-  :root{
-    /* Ocean Breeze Mix */
-    --bg1:#00c6ff;
-    --bg2:#6a11cb;
-    --card:#0f1c3f;
-    --card-soft:#16265a;
-    --text:#ffffff;
-    --muted:#bcdcff;
-    --accent1:#00e0ff;
-    --accent2:#3a7bff;
-    --danger:#ff4d6d;
-    --border:rgba(255,255,255,.15);
-  }
-
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-
-  body{
-    font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    color:var(--text);
-    overflow-x:hidden;
-    /* animated Ocean Breeze gradient */
-    background:
-      radial-gradient(circle at top right,rgba(255,255,255,.12),transparent 55%),
-      radial-gradient(circle at bottom left,rgba(0,0,0,.25),transparent 60%),
-      linear-gradient(135deg,#00c6ff,#0072ff,#6a11cb);
-    background-size:260% 260%;
-    animation:bgShift 18s ease-in-out infinite;
-  }
-
-  @keyframes bgShift{
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:0% 50%}
-  }
-
-  /* FLOATING EMOJIS (Ocean Breeze) */
-  .float-wrap{
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    overflow:hidden;
-    z-index:0;
-  }
-  .float-emoji{
-    position:absolute;
-    opacity:.55;
-    filter:drop-shadow(0 10px 16px rgba(0,0,0,.28));
-    animation:floatDrift 16s ease-in-out infinite;
-    user-select:none;
-  }
-  .float-emoji.small{font-size:22px; opacity:.45;}
-  .float-emoji.med{font-size:30px; opacity:.55;}
-  .float-emoji.big{font-size:42px; opacity:.6;}
-
-  @keyframes floatDrift{
-    0%{ transform:translate3d(0,18px,0) rotate(0deg); }
-    50%{ transform:translate3d(18px,-18px,0) rotate(10deg); }
-    100%{ transform:translate3d(0,18px,0) rotate(0deg); }
-  }
-
-  /* rising bubbles */
-  @keyframes floatRise{
-    0%{ transform:translate3d(0,110vh,0) rotate(0deg); opacity:0; }
-    10%{ opacity:.55; }
-    60%{ opacity:.55; }
-    100%{ transform:translate3d(-16px,-140px,0) rotate(24deg); opacity:0; }
-  }
-
-  /* layout shell */
-  .shell{
-    position:relative;
-    z-index:1;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-  }
-
-  /* top nav */
-  .nav{
-    height:56px;
-    padding:0 18px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    background:rgba(18,18,32,.65);
-    backdrop-filter:blur(18px);
-    border-bottom:1px solid rgba(255,255,255,.15);
-  }
-  .nav-left{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .logo-dot{
-    width:22px;height:22px;border-radius:8px;
-    background:linear-gradient(135deg,var(--accent1),var(--accent2));
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:0 0 18px rgba(255,213,74,.8);
-    font-size:13px;font-weight:800;
-  }
-  .nav-title{
-    font-weight:700;
-    font-size:16px;
-  }
-  .nav-tag{
-    font-size:11px;
-    padding:3px 7px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.35);
-    color:var(--muted);
-  }
-  .nav-right{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size:13px;
-  }
-  .nav-link{
-    color:var(--muted);
-    text-decoration:none;
-  }
-  .nav-btn{
-    border:none;
-    padding:8px 16px;
-    border-radius:999px;
-    font-size:13px;
-    background:linear-gradient(90deg,var(--accent1),var(--accent2));
-    color:#3b0b13;
-    cursor:pointer;
-    font-weight:600;
-    box-shadow:0 6px 18px rgba(0,0,0,.45);
-  }
-
-  /* center content */
-  .main{
-    flex:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:30px 14px 40px;
-  }
-
-  .wrap{
-    width:min(760px,100%);
-    background:radial-gradient(circle at top left,rgba(255,255,255,.06),transparent 55%),
-               radial-gradient(circle at 120% 120%,rgba(0,0,0,.45),transparent 50%),
-               linear-gradient(180deg,rgba(20,18,40,.96),rgba(10,10,28,.98));
-    border-radius:22px;
-    border:1px solid rgba(255,255,255,.14);
-    box-shadow:0 22px 55px rgba(0,0,0,.8);
-    padding:22px 22px 18px;
-    display:grid;
-    grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr);
-    gap:18px;
-  }
-  @media (max-width:720px){
-    .wrap{
-      grid-template-columns:1fr;
-      padding:20px 16px 16px;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mickey Smart AI — Login</title>
+  <link rel="icon" href="favicon.png">
+  
+  <style>
+    :root{
+      /* Ocean Breeze Mix */
+      --bg1:#00c6ff;
+      --bg2:#6a11cb;
+      --card:#0f1c3f;
+      --card-soft:#16265a;
+      --text:#ffffff;
+      --muted:#bcdcff;
+      --accent1:#00e0ff;
+      --accent2:#3a7bff;
+      --danger:#ff4d6d;
+      --border:rgba(255,255,255,.15);
     }
-    .nav{padding:0 12px;}
-  }
 
-  /* left side */
-  .hero{
-    padding-right:10px;
-    border-right:1px solid rgba(255,255,255,.11);
-  }
-  @media (max-width:720px){
-    .hero{
-      border-right:none;
-      border-bottom:1px solid rgba(255,255,255,.12);
-      padding-right:0;
-      padding-bottom:14px;
-      margin-bottom:6px;
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+
+    body{
+      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      overflow-x:hidden;
+      /* animated Ocean Breeze gradient */
+      background:
+        radial-gradient(circle at top right,rgba(255,255,255,.12),transparent 55%),
+        radial-gradient(circle at bottom left,rgba(0,0,0,.25),transparent 60%),
+        linear-gradient(135deg,#00c6ff,#0072ff,#6a11cb);
+      background-size:260% 260%;
+      animation:bgShift 18s ease-in-out infinite;
     }
-  }
 
-  .hero-label{
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:2px;
-    color:var(--muted);
-    margin-bottom:6px;
-  }
-  .hero-title{
-    font-size:22px;
-    font-weight:800;
-    margin-bottom:6px;
-  }
-  .hero-sub{
-    font-size:13px;
-    color:var(--muted);
-    margin-bottom:16px;
-    line-height:1.5;
-  }
+    @keyframes bgShift{
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
 
-  .pill-row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
-    margin-bottom:12px;
-  }
-  .pill{
-    font-size:11px;
-    padding:6px 9px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.16);
-    background:rgba(35,35,70,.96);
-    color:var(--muted);
-    display:inline-flex;
-    align-items:center;
-    gap:5px;
-  }
-  .pill strong{color:#ffffff;font-weight:600;}
+    /* FLOATING EMOJIS (Ocean Breeze) */
+    .float-wrap{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+    }
+    .float{
+      position:absolute;
+      font-size:32px;
+      opacity:0.15;
+      animation:float 6s ease-in-out infinite;
+    }
+    @keyframes float{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-30px)}
+    }
 
-  .price-card{
-    margin-top:8px;
-    background:linear-gradient(90deg,#ff4b91,#ff6a00);
-    border-radius:14px;
-    padding:10px 12px;
-    font-size:12px;
-    font-weight:600;
-    text-align:center;
-    box-shadow:0 12px 24px rgba(0,0,0,.5);
-  }
-  .price-sub{
-    font-size:11px;
-    margin-top:4px;
-    opacity:.9;
-  }
+    /* LOGIN CARD */
+    .login-wrap{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .login-card{
+      width:100%;
+      max-width:420px;
+      background:rgba(15,28,63,0.95);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:40px 32px;
+      box-shadow:0 24px 64px rgba(0,0,0,0.8);
+      backdrop-filter:blur(10px);
+    }
 
-  .cta-row{
-    margin-top:14px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-  }
-  .cta-btn{
-    border:none;
-    border-radius:999px;
-    padding:10px 14px;
-    font-size:12px;
-    font-weight:600;
-    cursor:pointer;
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    text-decoration:none;
-  }
-  .cta-primary{
-    background:linear-gradient(90deg,#30c6ff,#13a8ff);
-    color:#fff;
-    box-shadow:0 10px 25px rgba(0,0,0,.65);
-  }
-  .cta-ghost{
-    background:rgba(30,30,70,.96);
-    border:1px solid rgba(255,255,255,.15);
-    color:var(--text);
-  }
+    .card-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:28px;
+    }
+    .card-text h2{
+      font-size:26px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .card-text p{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+    .card-icon{
+      font-size:40px;
+      flex-shrink:0;
+    }
 
-  .risk-note{
-    margin-top:12px;
-    font-size:10px;
-    color:var(--muted);
-    opacity:.9;
-    display:flex;
-    gap:6px;
-    align-items:flex-start;
-  }
-  .risk-note span.icon{
-    color:var(--danger); font-size:12px; margin-top:1px;
-  }
+    .btn-row{
+      display:flex;
+      gap:12px;
+      margin-bottom:16px;
+    }
+    .btn{
+      flex:1;
+      padding:12px 24px;
+      border:none;
+      border-radius:10px;
+      font-weight:700;
+      font-size:14px;
+      cursor:pointer;
+      transition:all 0.2s ease;
+    }
+    .btn.primary{
+      background:linear-gradient(90deg,var(--accent1),var(--accent2));
+      color:var(--text);
+    }
+    .btn.primary:hover{
+      transform:translateY(-2px);
+      box-shadow:0 8px 24px rgba(0,224,255,0.3);
+    }
+    .btn.secondary{
+      background:rgba(255,255,255,0.1);
+      border:1px solid var(--border);
+      color:var(--text);
+    }
+    .btn.secondary:hover{
+      background:rgba(255,255,255,0.15);
+    }
+    .btn:disabled{
+      opacity:0.5;
+      cursor:not-allowed;
+    }
 
-  /* right side: LOGIN PANEL */
-  .auth-card{
-    background:linear-gradient(160deg,#0f1c3f,#1a2b6c,#6a11cb);
-    border-radius:18px;
-    border:1px solid rgba(255,255,255,.18);
-    padding:16px 16px 13px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    box-shadow:0 18px 35px rgba(0,0,0,.7);
-  }
-  .auth-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:4px;
-  }
-  .auth-title{
-    font-size:15px;
-    font-weight:700;
-  }
-  .auth-sub{
-    font-size:12px;
-    color:#ffd3d9;
-    margin-bottom:8px;
-  }
-  .lock-icon{
-    width:30px;height:30px;border-radius:10px;
-    background:linear-gradient(135deg,var(--accent1),var(--accent2));
-    display:flex;align-items:center;justify-content:center;
-    font-size:16px;
-    box-shadow:0 0 15px rgba(255,213,74,.9);
-  }
+    .status-box{
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+      background:rgba(255,255,255,.05);
+      border-radius:8px;
+      padding:12px;
+      min-height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-  .btn-row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:6px;
-  }
-  .btn{
-    cursor:pointer;
-    border:none;
-    border-radius:999px;
-    padding:10px 14px;
-    font-weight:600;
-    font-size:13px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:6px;
-  }
-  .btn.primary{
-    background:linear-gradient(90deg,#22e08a,#0bbf56);
-    color:#06130b;
-    box-shadow:0 10px 24px rgba(0,0,0,.7);
-  }
-  .btn.secondary{
-    background:rgba(40,8,18,.9);
-    border:1px solid rgba(255,255,255,.35);
-    color:#ffe7e7;
-  }
-  .status{
-    font-size:11px;
-    color:#ffd3d9;
-    margin-top:2px;
-  }
+    .error{
+      background:rgba(255,77,109,0.15);
+      border:1px solid rgba(255,77,109,0.3);
+      color:#ff6b9d;
+      border-radius:8px;
+      padding:12px;
+      margin-bottom:16px;
+      font-size:12px;
+    }
 
-</style>
+    .spinner{
+      width:16px;
+      height:16px;
+      border:2px solid rgba(0,224,255,0.2);
+      border-top:2px solid var(--accent1);
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+      display:inline-block;
+      margin-right:8px;
+    }
+    @keyframes spin{
+      to{transform:rotate(360deg)}
+    }
+
+    @media(max-width:768px){
+      .login-card{
+        max-width:100%;
+        padding:32px 24px;
+      }
+      .card-head{
+        flex-direction:column;
+      }
+      .card-text h2{
+        font-size:22px;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="float-wrap" id="floats"></div>
 
-  <!-- floating emojis (Ocean Breeze) -->
-  <div class="float-wrap" aria-hidden="true">
-    <div class="float-emoji big" style="left:6%;  top:12%;  animation-duration:18s; animation-delay:-2s;">🌊</div>
-    <div class="float-emoji med" style="left:18%; top:30%;  animation-duration:15s; animation-delay:-6s;">💧</div>
-    <div class="float-emoji small" style="left:30%; top:56%; animation-duration:17s; animation-delay:-4s;">✨</div>
-    <div class="float-emoji med" style="left:48%; top:18%;  animation-duration:16s; animation-delay:-7s;">🤖</div>
-    <div class="float-emoji big" style="left:66%; top:44%;  animation-duration:19s; animation-delay:-3s;">🌌</div>
-    <div class="float-emoji med" style="left:82%; top:26%;  animation-duration:14s; animation-delay:-5s;">🚀</div>
-    <div class="float-emoji small" style="left:92%; top:72%; animation-duration:17s; animation-delay:-8s;">🫧</div>
-
-    <div class="float-emoji med" style="left:12%; top:78%; animation-duration:20s; animation-delay:-9s;">🧠</div>
-    <div class="float-emoji small" style="left:40%; top:84%; animation-duration:18s; animation-delay:-11s;">📊</div>
-    <div class="float-emoji med" style="left:58%; top:68%; animation-duration:16s; animation-delay:-10s;">⚡</div>
-    <div class="float-emoji small" style="left:74%; top:82%; animation-duration:19s; animation-delay:-12s;">🌟</div>
-
-    <!-- rising bubbles -->
-    <div class="float-emoji small" style="left:10%; animation:floatRise 12s linear infinite; animation-delay:-2s;">🫧</div>
-    <div class="float-emoji small" style="left:26%; animation:floatRise 14s linear infinite; animation-delay:-6s;">🫧</div>
-    <div class="float-emoji small" style="left:44%; animation:floatRise 13s linear infinite; animation-delay:-4s;">🫧</div>
-    <div class="float-emoji small" style="left:62%; animation:floatRise 15s linear infinite; animation-delay:-7s;">🫧</div>
-    <div class="float-emoji small" style="left:80%; animation:floatRise 12.5s linear infinite; animation-delay:-5s;">🫧</div>
-  </div>
-
-<div class="shell">
-    <!-- top nav -->
-    <header class="nav">
-      <div class="nav-left">
-        <div class="logo-dot">M</div>
-        <div>
-          <div class="nav-title">Mickey Smart AI</div>
-          <div class="nav-tag">AI Trading • Deriv</div>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="card-head">
+        <div class="card-text">
+          <h2>Secure Login</h2>
+          <p>Use your invite or create an account to access the dashboard</p>
         </div>
+        <div class="card-icon">🔒</div>
       </div>
-      <div class="nav-right">
-        <a class="nav-link" href="#">Home</a>
-        <button class="nav-btn" id="nav-login-btn">Login</button>
+
+      <div id="errorBox" class="error" style="display:none"></div>
+
+      <div class="btn-row">
+        <button id="loginBtn" class="btn primary">Sign in / Sign up</button>
+        <button id="logoutBtn" class="btn secondary" style="display:none">Log out</button>
       </div>
-    </header>
 
-    <!-- main content -->
-    <main class="main">
-      <div class="wrap">
-        <!-- LEFT -->
-        <section class="hero">
-          <div class="hero-label">SMART AUTOMATION • 24/7</div>
-          <h1 class="hero-title">Login to Mickey Smart AI</h1>
-          <p class="hero-sub">
-            Connect to your private trading dashboard, manage your risk,
-            and let the AI watch the charts while you focus on real life.
-          </p>
-
-          <div class="pill-row">
-            <div class="pill"><strong>AI</strong> for Deriv</div>
-            <div class="pill"><strong>Risk management</strong></div>
-            <div class="pill"><strong>Real-time</strong> monitoring</div>
-          </div>
-
-          <div class="price-card">
-            Access starts at <strong>JMD $15,000</strong> / <strong>~USD $97</strong> per month
-            <div class="price-sub">Ask admin for full details &amp; funding options.</div>
-          </div>
-
-          <div class="cta-row">
-            <a class="cta-btn cta-primary" href="https://t.me/mickeydonaibot" target="_blank" rel="noopener">
-              💬 Message me on Telegram
-            </a>
-            <button class="cta-btn cta-ghost">
-              📄 View basic usage guide
-            </button>
-          </div>
-
-          <div class="risk-note">
-            <span class="icon">⚠</span>
-            <span>
-              Trading on Deriv involves significant risk and may not be suitable for everyone.
-              Only trade with money you can afford to lose and make sure you understand the risks involved.
-            </span>
-          </div>
-        </section>
-
-        <!-- RIGHT: login panel -->
-        <section class="auth-card">
-          <div class="auth-head">
-            <div>
-              <div class="auth-title">Secure Login</div>
-              <div class="auth-sub">
-                Use your email invite to sign in or create your account to continue to the dashboard.
-              </div>
-            </div>
-            <div class="lock-icon">🔒</div>
-          </div>
-
-          <div class="btn-row">
-            <button id="btn-open" class="btn primary">
-              Sign in / Sign up
-            </button>
-            <button id="btn-logout" class="btn secondary" style="display:none">
-              Log out
-            </button>
-          </div>
-
-          <div id="status" class="status">Checking session…</div>
-        </section>
+      <div class="status-box">
+        <span id="status">Checking authentication…</span>
       </div>
-    </main>
+    </div>
   </div>
 
-<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-<script>
-  let landingRedirecting = false;
-  const landingRedirectKey = "mickey_landing_redirect_at";
-  
-  function markLandingRedirect(){
-    try { sessionStorage.setItem(landingRedirectKey, String(Date.now())); } catch (e) {}
-  }
-  function clearLandingRedirect(){
-    try { sessionStorage.removeItem(landingRedirectKey); } catch (e) {}
-  }
-  function landingRedirectLoopActive(){
-    try {
-      const last = Number(sessionStorage.getItem(landingRedirectKey) || 0);
-      return last > 0 && (Date.now() - last) < 5000;
-    } catch (e) {
-      return false;
-    }
-  }
-  
-  async function waitForIdentitySession(timeoutMs = 10000){
-    const started = Date.now();
-    while ((Date.now() - started) < timeoutMs) {
-      try {
-        const user = window.netlifyIdentity && netlifyIdentity.currentUser
-          ? netlifyIdentity.currentUser()
-          : null;
-        if (user) {
-          if (typeof user.jwt === "function") {
-            await user.jwt();
-          }
-          return user;
-        }
-      } catch (e) {}
-      await new Promise(resolve => window.setTimeout(resolve, 250));
-    }
-    return null;
-  }
-
-  function userHasMemberAccess(user){
-    return !!user;
-  }
-
-  function showAccessPending(status, btnOpen, btnLogout, navLogin){
-    landingRedirecting = false;
-    clearLandingRedirect();
-    if (status) status.textContent = "Signed in, but this account does not have dashboard access yet. Ask the admin to add the member role.";
-    if (btnOpen) {
-      btnOpen.disabled = false;
-      btnOpen.textContent = "Open Dashboard";
-    }
-    if (btnLogout) {
-      btnLogout.disabled = false;
-      btnLogout.style.display = "inline-flex";
-    }
-    if (navLogin) navLogin.disabled = false;
-  }
-
-  async function goApp(message){
-    if (landingRedirecting) return;
-    landingRedirecting = true;
-    markLandingRedirect();
-    const status = document.getElementById("status");
-    const btnOpen = document.getElementById("btn-open");
-    const btnLogout = document.getElementById("btn-logout");
-    const navLogin = document.getElementById("nav-login-btn");
-    if (status) status.textContent = message || "Signed in - preparing dashboard access...";
-    if (btnOpen) btnOpen.disabled = true;
-    if (btnLogout) btnLogout.disabled = true;
-    if (navLogin) navLogin.disabled = true;
-
-    const user = await waitForIdentitySession();
-    if (!user) {
-      landingRedirecting = false;
-      clearLandingRedirect();
-      if (status) status.textContent = "Login worked, but secure access was not ready yet. Please tap Login again in a moment.";
-      if (btnOpen) btnOpen.disabled = false;
-      if (btnLogout) btnLogout.disabled = false;
-      if (navLogin) navLogin.disabled = false;
-      return;
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    // Add floating emojis
+    const emojis = ['🚀', '💡', '⚡', '🎯', '✨'];
+    const floatWrap = document.getElementById('floats');
+    for (let i = 0; i < 5; i++) {
+      const float = document.createElement('div');
+      float.className = 'float';
+      float.textContent = emojis[i];
+      float.style.left = Math.random() * 100 + '%';
+      float.style.top = Math.random() * 100 + '%';
+      float.style.animationDelay = Math.random() * 2 + 's';
+      floatWrap.appendChild(float);
     }
 
-    if (!userHasMemberAccess(user)) {
-      showAccessPending(status, btnOpen, btnLogout, navLogin);
-      return;
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const statusBox = document.getElementById('status');
+    const errorBox = document.getElementById('errorBox');
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
     }
 
-    if (status) status.textContent = "Signed in - redirecting to dashboard...";
-    const dashboardUrl = new URL("/smart-ai-bot-6-account-picker-fixed/app/", window.location.origin).toString();
-    window.setTimeout(() => window.location.replace(dashboardUrl), 400);
-  }
+    function clearError() {
+      errorBox.style.display = 'none';
+    }
 
-  document.addEventListener("DOMContentLoaded", function(){
-    const status   = document.getElementById("status");
-    const btnOpen  = document.getElementById("btn-open");
-    const btnLogout= document.getElementById("btn-logout");
-    const navLogin = document.getElementById("nav-login-btn");
+    function userHasAccess(user) {
+      return user && (user.role === 'admin' || user.role === 'member' || !user.role);
+    }
 
-    function openLogin(){
-      if (landingRedirecting) return;
-      if (!window.netlifyIdentity) return;
+    function goToDashboard(message) {
+      statusBox.innerHTML = `<div class="spinner"></div>${message}`;
+      loginBtn.disabled = true;
+      logoutBtn.disabled = true;
+      setTimeout(() => {
+        window.location.replace('/app/');
+      }, 800);
+    }
 
-      const user = typeof netlifyIdentity.currentUser === "function"
+    loginBtn.onclick = function() {
+      if (!window.netlifyIdentity) {
+        showError('Authentication service not ready');
+        return;
+      }
+      const user = typeof netlifyIdentity.currentUser === 'function'
         ? netlifyIdentity.currentUser()
         : null;
 
       if (user) {
-        if (!userHasMemberAccess(user)) {
-          showAccessPending(status, btnOpen, btnLogout, navLogin);
-          return;
+        if (userHasAccess(user)) {
+          goToDashboard('Redirecting to dashboard...');
+        } else {
+          showError('Your account is pending access approval.');
+          loginBtn.textContent = 'Awaiting Access';
+          loginBtn.disabled = true;
+          logoutBtn.style.display = 'inline-flex';
         }
-        goApp("Signed in - redirecting to dashboard...");
+      } else {
+        netlifyIdentity.open('login');
+      }
+    };
+
+    logoutBtn.onclick = function() {
+      netlifyIdentity.logout();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!window.netlifyIdentity) {
+        showError('Authentication service failed to load');
         return;
       }
 
-      netlifyIdentity.open("login");
-    }
-    
-    btnOpen.onclick  = openLogin;
-    btnLogout.onclick = function() {
-      netlifyIdentity.logout();
-    };
-    navLogin.onclick = openLogin;
-
-    netlifyIdentity.on("init", (user) => {
-      if (user) {
-        if (!userHasMemberAccess(user)) {
-          showAccessPending(status, btnOpen, btnLogout, navLogin);
-          return;
+      netlifyIdentity.on('init', (user) => {
+        if (user) {
+          statusBox.textContent = '✓ Signed in';
+          loginBtn.textContent = 'Go to Dashboard';
+          logoutBtn.style.display = 'inline-flex';
+          clearError();
+        } else {
+          statusBox.textContent = 'Ready to sign in';
+          loginBtn.textContent = 'Sign in / Sign up';
+          logoutBtn.style.display = 'none';
+          clearError();
         }
-        if (landingRedirectLoopActive()) {
-          clearLandingRedirect();
-          status.textContent = "Signed in. Automatic dashboard redirect was paused to stop a refresh loop. Tap Open Dashboard when ready.";
-          btnOpen.textContent = "Open Dashboard";
-          btnLogout.style.display = "inline-flex";
-          landingRedirecting = false;
-          btnOpen.disabled = false;
-          return;
+      });
+
+      netlifyIdentity.on('login', (user) => {
+        if (user && userHasAccess(user)) {
+          goToDashboard('Signed in — redirecting...');
+        } else if (user) {
+          showError('Your account is pending access approval.');
+          loginBtn.textContent = 'Awaiting Access';
+          loginBtn.disabled = true;
+          logoutBtn.style.display = 'inline-flex';
         }
-        status.textContent = "Signed in — redirecting to dashboard…";
-        btnOpen.textContent = "Open Dashboard";
-        btnLogout.style.display = "inline-flex";
-        landingRedirecting = false;
-        btnOpen.disabled = false;
-      } else {
-        clearLandingRedirect();
-        btnOpen.textContent = "Sign in / Sign up";
-        status.textContent = "Not signed in.";
-        btnLogout.style.display = "none";
-        btnOpen.disabled = false;
-      }
-    });
+      });
 
-    netlifyIdentity.on("login", (user) => {
-      if (user && userHasMemberAccess(user)) {
-        goApp("Signed in - redirecting to dashboard...");
-      }
-    });
+      netlifyIdentity.on('logout', () => {
+        window.location.replace('/');
+      });
 
-    netlifyIdentity.on("logout", () => {
-      clearLandingRedirect();
-      location.reload();
-    });
+      netlifyIdentity.on('error', (err) => {
+        showError('Login error: ' + (err?.message || 'Unknown error'));
+        statusBox.textContent = 'Error - please try again';
+        loginBtn.disabled = false;
+      });
 
-    console.log("✅ Landing page ready");
-  });
-</script>
+      netlifyIdentity.init();
+    });
+  </script>
 </body>
 </html>

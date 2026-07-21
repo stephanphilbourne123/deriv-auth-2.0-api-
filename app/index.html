@@ -1,1 +1,383 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mickey Smart AI - Account Balance</title><style>:root{--bg-1:#061629;--bg-2:#0a3d91;--bg-3:#6a11cb;--text:#f7fbff;--muted:rgba(235,245,255,0.78);--good:#22c55e;--border:rgba(120,200,255,0.22)}*{box-sizing:border-box}html,body{height:100%;margin:0;color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at 12% 18%,rgba(255,255,255,0.22),transparent 52%),radial-gradient(circle at 88% 78%,rgba(255,255,255,0.16),transparent 55%),radial-gradient(circle at 30% 85%,rgba(56,189,248,0.35),transparent 60%),radial-gradient(circle at 85% 25%,rgba(106,17,203,0.28),transparent 62%),linear-gradient(135deg,var(--bg-1),var(--bg-2),var(--bg-3));overflow:auto}.balance-card{background:linear-gradient(180deg,rgba(34,197,94,.15),rgba(56,189,248,.12));border:1px solid rgba(34,197,94,.35);border-radius:18px;padding:20px;margin:24px;box-shadow:0 0 28px rgba(34,197,94,.25),0 12px 24px rgba(0,0,0,.3);backdrop-filter:blur(16px);display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}.balance-card-left{display:flex;align-items:center;gap:16px}.balance-card-icon{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,rgba(34,197,94,.3),rgba(56,189,248,.3));border:1px solid rgba(34,197,94,.5);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 18px rgba(34,197,94,.2)}.balance-card-info{display:flex;flex-direction:column;gap:6px}.balance-card-label{font-size:12px;color:rgba(235,245,255,.6);text-transform:uppercase;letter-spacing:1px;font-weight:700}.balance-card-account{font-size:16px;font-weight:700;color:var(--text)}.balance-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}.balance-card-amount{font-size:32px;font-weight:1000;color:#22e08a;line-height:1;text-shadow:0 0 18px rgba(34,224,138,.3)}.balance-card-time{font-size:11px;color:rgba(235,245,255,.5)}.error-msg{color:#ff6b9d;font-size:13px}@media(max-width:768px){.balance-card{grid-template-columns:1fr;gap:12px}.balance-card-right{align-items:flex-start}.balance-card-amount{font-size:24px}}</style></head><body><div class="balance-card" id="balanceCard"><div class="balance-card-left"><div class="balance-card-icon">💰</div><div class="balance-card-info"><div class="balance-card-label">Account Balance</div><div class="balance-card-account" id="balanceAccount">Loading...</div></div></div><div class="balance-card-right"><div class="balance-card-amount" id="balanceAmount">--</div><div class="balance-card-time" id="balanceTime">Fetching...</div></div></div><script>document.addEventListener('DOMContentLoaded',function(){console.log('✅ Dashboard loaded');initializeBalance()});function initializeBalance(){try{const selectedAccount=JSON.parse(sessionStorage.getItem('selected_account')||'{}');const token=sessionStorage.getItem('deriv_token');if(!token||!selectedAccount.loginid){console.warn('❌ No token or account');document.getElementById('balanceAccount').textContent='Not connected';document.getElementById('balanceAmount').textContent='--';return}document.getElementById('balanceAccount').textContent=selectedAccount.loginid;if(selectedAccount.balance){const balance=parseFloat(selectedAccount.balance);const currency=selectedAccount.currency||'USD';console.log('✅ Balance from selector:',currency,balance.toFixed(2));document.getElementById('balanceAmount').textContent=currency+' '+balance.toFixed(2);document.getElementById('balanceTime').textContent='Just now'}else{console.warn('⚠️ No balance data');document.getElementById('balanceAmount').textContent='0.00';document.getElementById('balanceTime').textContent='Unavailable'}}catch(error){console.error('Error:',error)}}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mickey Smart AI - Dashboard</title>
+  <style>
+    :root {
+      --bg-1: #06130b;
+      --bg-2: #0d2618;
+      --bg-3: #1a4d2e;
+      --text: #ffffff;
+      --text-dim: #bcdcff;
+      --accent: #22e08a;
+      --danger: #ff6b9d;
+      --border: rgba(34, 224, 138, 0.2);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: Inter, system-ui, Segoe UI, Roboto, sans-serif;
+      background: var(--bg-1);
+      color: var(--text);
+    }
+    .dashboard-wrap { display: flex; height: 100vh; }
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(180deg, rgba(13, 38, 24, 0.8), rgba(6, 19, 11, 0.9));
+      border-right: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      overflow-y: auto;
+    }
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(34, 224, 138, 0.1);
+    }
+    .logo-icon { font-size: 32px; }
+    .logo-text {
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--accent);
+    }
+    .nav-section h3 { 
+      font-size: 11px; 
+      font-weight: 700; 
+      color: var(--text-dim); 
+      text-transform: uppercase; 
+      letter-spacing: 1px; 
+      margin-bottom: 12px; 
+    }
+    .nav-btn {
+      width: 100%;
+      padding: 12px 16px;
+      text-align: left;
+      background: rgba(34, 224, 138, 0.08);
+      border: 1px solid rgba(34, 224, 138, 0.2);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+    }
+    .nav-btn:hover { 
+      background: rgba(34, 224, 138, 0.15); 
+      border-color: rgba(34, 224, 138, 0.4); 
+    }
+    .nav-btn.active { 
+      background: linear-gradient(90deg, rgba(34, 224, 138, 0.3), rgba(34, 224, 138, 0.1)); 
+      border-color: var(--accent); 
+      color: var(--accent); 
+    }
+    .nav-spacer { flex: 1; }
+    .logout-btn {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255, 109, 109, 0.1);
+      border: 1px solid rgba(255, 109, 109, 0.3);
+      border-radius: 8px;
+      color: var(--danger);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { 
+      background: rgba(255, 109, 109, 0.2); 
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .top-bar {
+      background: linear-gradient(90deg, rgba(6, 19, 11, 0.6), rgba(13, 38, 24, 0.4));
+      border-bottom: 1px solid var(--border);
+      padding: 20px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .top-bar-title { 
+      font-size: 20px; 
+      font-weight: 800; 
+    }
+    .account-icon-box { 
+      font-size: 32px; 
+      padding: 8px; 
+      background: rgba(34, 224, 138, 0.15); 
+      border-radius: 10px; 
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: linear-gradient(135deg, rgba(19, 51, 33, 0.6), rgba(13, 38, 24, 0.4));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 { 
+      font-size: 20px; 
+      margin-bottom: 16px; 
+      color: var(--accent); 
+    }
+    .card p { 
+      color: var(--text-dim); 
+      margin-bottom: 16px; 
+    }
+
+    .balance-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .balance-item {
+      background: rgba(34, 224, 138, 0.1);
+      border: 1px solid rgba(34, 224, 138, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .balance-item label { 
+      font-size: 12px; 
+      color: var(--text-dim); 
+      text-transform: uppercase; 
+      font-weight: 700; 
+      display: block; 
+      margin-bottom: 8px; 
+    }
+    .balance-item .value { 
+      font-size: 24px; 
+      font-weight: 800; 
+      color: var(--accent); 
+    }
+
+    .balance-actions {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .btn-primary, .btn-danger {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { 
+      background: linear-gradient(90deg, var(--accent), #0bbf56); 
+      color: var(--bg-1); 
+    }
+    .btn-primary:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 8px 24px rgba(34, 224, 138, 0.3); 
+    }
+    .btn-danger { 
+      background: rgba(255, 109, 109, 0.2); 
+      border: 1px solid rgba(255, 109, 109, 0.4); 
+      color: var(--danger); 
+    }
+    .btn-danger:hover { 
+      background: rgba(255, 109, 109, 0.3); 
+    }
+
+    .error-box {
+      background: rgba(255, 109, 109, 0.15);
+      border: 1px solid rgba(255, 109, 109, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      color: var(--danger);
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-wrap { flex-direction: column; }
+      .sidebar { width: 100%; max-height: 200px; }
+      .content { padding: 16px; }
+      .top-bar { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-wrap">
+    <aside class="sidebar">
+      <div class="logo-section">
+        <div class="logo-icon">💰</div>
+        <div class="logo-text">Mickey AI</div>
+      </div>
+
+      <div class="nav-section">
+        <h3>Navigation</h3>
+        <button class="nav-btn active" data-panel="overview">📊 Overview</button>
+        <button class="nav-btn" data-panel="trading">📈 Trading</button>
+        <button class="nav-btn" data-panel="settings">⚙️ Settings</button>
+      </div>
+
+      <div class="nav-spacer"></div>
+      <button class="logout-btn" onclick="disconnectAccount()">Log Out</button>
+    </aside>
+
+    <main>
+      <div class="top-bar">
+        <div class="top-bar-title">Dashboard</div>
+        <div class="account-icon-box" id="accountAvatar">💰</div>
+      </div>
+
+      <div class="content">
+        <div id="overview" class="panel active">
+          <div id="errorBox" class="error-box" style="display:none;"></div>
+
+          <div class="card">
+            <h2>👤 Account Information</h2>
+            <div class="balance-section">
+              <div class="balance-item">
+                <label>Account ID</label>
+                <p class="value" id="accountLoginId">-</p>
+              </div>
+              <div class="balance-item">
+                <label>Account Type</label>
+                <p class="value" style="font-size: 16px;" id="accountType">-</p>
+              </div>
+              <div class="balance-item">
+                <label>Account Balance</label>
+                <p class="value" id="accountBalance">USD 0.00</p>
+              </div>
+              <div class="balance-item">
+                <label>P/L (Today)</label>
+                <p class="value" id="accountPL">USD 0.00</p>
+              </div>
+            </div>
+            <div class="balance-actions">
+              <button class="btn-primary" onclick="redirectToSelector()">Switch Account</button>
+              <button class="btn-danger" onclick="disconnectAccount()">Disconnect</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>📈 Account Overview</h2>
+            <p>Your trading activity and statistics will appear here.</p>
+          </div>
+        </div>
+
+        <div id="trading" class="panel">
+          <div class="card">
+            <h2>📊 Trading History</h2>
+            <p>View your trading history and performance metrics.</p>
+          </div>
+        </div>
+
+        <div id="settings" class="panel">
+          <div class="card">
+            <h2>⚙️ Settings</h2>
+            <p>Manage your account preferences and security settings.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    function showError(msg) {
+      const errorBox = document.getElementById('errorBox');
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+    }
+
+    function loadAccountData() {
+      try {
+        const accountData = JSON.parse(sessionStorage.getItem('deriv_selected_account') || '{}');
+        if (!accountData || !accountData.account_id) {
+          showError('No account data found. Redirecting to selector...');
+          setTimeout(() => redirectToSelector(), 2000);
+          return;
+        }
+        const isDemo = accountData.account_type === 'demo';
+        const icon = isDemo ? '🧪' : '💰';
+        const typeLabel = isDemo ? 'Demo Account' : 'Live Account';
+        const balance = accountData.balance !== undefined ? parseFloat(accountData.balance).toFixed(2) : '0.00';
+        const currency = accountData.currency || 'USD';
+        document.getElementById('accountAvatar').textContent = icon;
+        document.getElementById('accountLoginId').textContent = accountData.account_id;
+        document.getElementById('accountType').textContent = `${typeLabel} • ${currency}`;
+        document.getElementById('accountBalance').textContent = `${currency} ${balance}`;
+        console.log('✅ Account loaded:', accountData);
+      } catch (error) {
+        console.error('❌ Error loading account:', error);
+        showError('Error loading account data');
+      }
+    }
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        const panelId = this.dataset.panel;
+        document.getElementById(panelId).classList.add('active');
+      });
+    });
+
+    function redirectToSelector() {
+      console.log('🔄 Redirecting to account selector...');
+      window.location.replace('/app/selector.html');
+    }
+
+    function disconnectAccount() {
+      if (!confirm('Disconnect your account?')) return;
+      ['deriv_token', 'deriv_selected_account', 'deriv_connected', 'selected_account', 'deriv_user_id'].forEach(key => {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+      });
+      console.log('✅ Account disconnected');
+      window.location.replace('/');
+    }
+
+    // Protect with Netlify Identity
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!window.netlifyIdentity) {
+        showError('Authentication service not available');
+        setTimeout(() => window.location.replace('/'), 3000);
+        return;
+      }
+
+      netlifyIdentity.on('init', function(user) {
+        if (!user) {
+          console.warn('❌ Not logged in - redirecting to login');
+          setTimeout(() => window.location.replace('/'), 500);
+          return;
+        }
+        console.log('✅ User authenticated:', user.email);
+        loadAccountData();
+      });
+
+      netlifyIdentity.on('logout', () => {
+        window.location.replace('/');
+      });
+
+      netlifyIdentity.init();
+    });
+  </script>
+</body>
+</html>
